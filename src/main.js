@@ -190,14 +190,15 @@ async function resetGameData() {
     console.warn("[reset] OPFS clear failed:", err);
   }
 
-  // Clear IndexedDB databases used by Emscripten IDBFS
+  // Only this game's databases: the origin (e.g. <user>.github.io) is shared
+  // with other sites. Skins: USERDATA_DB in shared.js. Saves: the engine's
+  // IDBFS mount, named after its directory (SAVE_DIR in saves.js).
   try {
-    const dbs = await indexedDB.databases();
     await Promise.all(
-      dbs.map(
-        (db) =>
+      ["vc-userdata", "/vc-assets/local/userfiles"].map(
+        (name) =>
           new Promise((resolve) => {
-            const req = indexedDB.deleteDatabase(db.name);
+            const req = indexedDB.deleteDatabase(name);
             req.onsuccess = resolve;
             req.onerror = resolve;
             req.onblocked = resolve;
