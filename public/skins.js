@@ -11,6 +11,7 @@
         SKIN_STORE, reqToPromise, txDone, openUserDataDB, withDB, expandZips,
         formatSize, download, readFile, el, ready, createPanel, lockPanels,
     } = U;
+    const { t } = window.vcI18n;
     const { setStatus, run, bindDropZone } = createPanel("skins-status");
 
     const SKIN_DIR = "/vc-assets/local/skins";
@@ -22,20 +23,20 @@
     // ─── Image conversion ───────────────────────────────────────────
 
     function validateBmp(bytes) {
-        if (bytes.length < 54 || bytes[0] !== 0x42 || bytes[1] !== 0x4d) return "not a BMP file";
+        if (bytes.length < 54 || bytes[0] !== 0x42 || bytes[1] !== 0x4d) return t("skins.bmp.notBmp");
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         const dataOffset = view.getUint32(10, true);
         const headerSize = view.getUint32(14, true);
-        if (headerSize < 40) return "unsupported BMP header";
+        if (headerSize < 40) return t("skins.bmp.header");
         const width = view.getInt32(18, true);
         const height = view.getInt32(22, true);
         const bpp = view.getUint16(28, true);
         const compression = view.getUint32(30, true);
-        if (height === -SKIN_SIZE) return "top-down row order";
-        if (width !== SKIN_SIZE || height !== SKIN_SIZE) return `${width}x${Math.abs(height)}, needs ${SKIN_SIZE}x${SKIN_SIZE}`;
-        if (bpp !== 24) return `${bpp}-bit, needs 24-bit`;
-        if (compression !== 0) return "compressed, needs uncompressed";
-        if (dataOffset + SKIN_SIZE * SKIN_SIZE * 3 > bytes.length) return "file is truncated";
+        if (height === -SKIN_SIZE) return t("skins.bmp.topDown");
+        if (width !== SKIN_SIZE || height !== SKIN_SIZE) return t("skins.bmp.size", { width, height: Math.abs(height), needed: SKIN_SIZE });
+        if (bpp !== 24) return t("skins.bmp.depth", { bpp });
+        if (compression !== 0) return t("skins.bmp.compressed");
+        if (dataOffset + SKIN_SIZE * SKIN_SIZE * 3 > bytes.length) return t("skins.bmp.truncated");
         return null;
     }
 
@@ -81,7 +82,7 @@
         try {
             bitmap = await createImageBitmap(file);
         } catch {
-            throw new Error("The browser could not decode this image.");
+            throw new Error(t("skins.decodeFailed"));
         }
         const canvas = document.createElement("canvas");
         canvas.width = SKIN_SIZE;
@@ -197,15 +198,15 @@
         async function refreshSkins() {
             const skins = await listSkins();
             if (!skins.length) {
-                skinList.replaceChildren(el("li", { className: "userdata-empty" }, "No custom skins imported."));
+                skinList.replaceChildren(el("li", { className: "userdata-empty" }, t("skins.none")));
                 return;
             }
             skinList.replaceChildren(...skins.map((s) => el("li", { className: "userdata-row" },
                 el("span", { className: "userdata-row-title" }, s.name),
-                el("span", { className: "userdata-row-info" }, s.converted ? `converted from ${s.sourceName}` : formatSize(s.contents.length)),
+                el("span", { className: "userdata-row-info" }, s.converted ? t("skins.convertedFrom", { name: s.sourceName }) : formatSize(s.contents.length)),
                 el("span", { className: "userdata-row-actions" },
-                    el("button", { type: "button", className: "userdata-btn", onclick: run(() => download(s.contents, `${s.name}.bmp`)) }, "Export"),
-                    el("button", { type: "button", className: "userdata-btn userdata-btn-danger", onclick: run(() => removeSkin(s.name)) }, "Remove")))));
+                    el("button", { type: "button", className: "userdata-btn", onclick: run(() => download(s.contents, `${s.name}.bmp`)) }, t("saves.export")),
+                    el("button", { type: "button", className: "userdata-btn userdata-btn-danger", onclick: run(() => removeSkin(s.name)) }, t("saves.remove"))))));
         }
 
         async function importSkinFiles(picked) {
@@ -216,15 +217,15 @@
             for (const file of files) {
                 const name = skinNameFromFile(file.name);
                 if (!name) {
-                    failed.push(`${file.name}: file name has no usable characters`);
+                    failed.push(t("skins.badName", { file: file.name }));
                     continue;
                 }
                 if (file.size > SKIN_MAX_FILE) {
-                    failed.push(`${file.name}: file is too large`);
+                    failed.push(t("skins.tooLarge", { file: file.name }));
                     continue;
                 }
                 let bytes = await readFile(file);
-                const problem = /\.bmp$/i.test(file.name) ? validateBmp(bytes) : "not a BMP";
+                const problem = /\.bmp$/i.test(file.name) ? validateBmp(bytes) : t("skins.bmp.notBmp");
                 let converted = false;
                 if (problem) {
                     try {
@@ -236,19 +237,19 @@
                     }
                 }
                 await putSkin({ name, contents: bytes, sourceName: file.name, converted, addedAt: new Date() });
-                done.push(`${name}${existing.has(name) ? " (replaced)" : ""}${converted ? " (converted to 24-bit 256x256 BMP)" : ""}`);
+                done.push([name, existing.has(name) && t("skins.replaced"), converted && t("skins.convertedTo")].filter(Boolean).join(" "));
             }
             await refreshSkins();
             const parts = [];
-            if (done.length) parts.push(`Imported skin${done.length > 1 ? "s" : ""}: ${done.join(", ")}.`);
-            if (failed.length) parts.push(`Failed: ${failed.join("; ")}.`);
+            if (done.length) parts.push(t("skins.imported", { list: done.join(", ") }));
+            if (failed.length) parts.push(t("skins.failed", { list: failed.join("; ") }));
             setStatus(parts.join(" "), failed.length ? "error" : "ok");
         }
 
         async function removeSkin(name) {
-            if (!confirm(`Remove the skin "${name}"? This cannot be undone.`)) return;
+            if (!confirm(t("skins.removeConfirm", { name }))) return;
             await deleteSkin(name);
-            setStatus(`Removed skin ${name}.`, "ok");
+            setStatus(t("skins.removed", { name }), "ok");
             await refreshSkins();
         }
 
@@ -258,10 +259,12 @@
         }));
         bindDropZone(skinDrop, (files) => importSkinFiles(files));
 
-        refreshSkins().catch((err) => {
+        const showStorageError = (err) => {
             console.error("[userdata]", err);
-            setStatus(`Could not open browser storage: ${err && err.message ? err.message : err}`, "error");
-        });
+            setStatus(t("userdata.storageError", { message: err && err.message ? err.message : err }), "error");
+        };
+        refreshSkins().catch(showStorageError);
+        window.addEventListener("vc:languagechange", () => refreshSkins().catch(showStorageError));
     }
 
     Object.assign(U, { prepareLaunch, installIntoFS, validateBmp });
