@@ -8,6 +8,8 @@
 // its own IDBFS sync would overwrite changes made behind its back, so the
 // panel is locked by skins.js prepareLaunch().
 (function () {
+    const { t } = window.vcI18n;
+
     const USERDATA_DB = "vc-userdata";
     const USERDATA_VERSION = 1;
     const SKIN_STORE = "skins";
@@ -37,7 +39,7 @@
             req.onupgradeneeded = (e) => upgrade(req.result, e.target.transaction);
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => reject(req.error);
-            req.onblocked = () => reject(new Error(`Database "${name}" is in use by another tab. Close other game tabs and try again.`));
+            req.onblocked = () => reject(new Error(t("userdata.dbBlocked", { name })));
         });
     }
 
@@ -78,7 +80,7 @@
             total += value.length;
             if (total > limit) {
                 await reader.cancel();
-                throw new Error(`${label} is larger than ${formatSize(limit)} once extracted.`);
+                throw new Error(t("userdata.zip.tooLargeExtracted", { label, size: formatSize(limit) }));
             }
             chunks.push(value);
         }
@@ -98,7 +100,7 @@
     async function extractZip(file, wanted, limit = ZIP_MAX_ENTRY) {
         const bytes = await readFile(file);
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-        const damaged = () => new Error(`${file.name} is damaged or not a valid ZIP archive.`);
+        const damaged = () => new Error(t("userdata.zip.damaged", { file: file.name }));
         // Every read below goes through here so a bad offset is a clear error
         // instead of a RangeError.
         const within = (pos, len) => {
@@ -112,10 +114,10 @@
                 break;
             }
         }
-        if (eocd < 0) throw new Error(`${file.name} is not a valid ZIP archive.`);
+        if (eocd < 0) throw new Error(t("userdata.zip.invalid", { file: file.name }));
         const count = view.getUint16(eocd + 10, true);
         let p = view.getUint32(eocd + 16, true);
-        if (count === 0xffff || p === 0xffffffff) throw new Error(`${file.name} is a ZIP64 archive, which is not supported.`);
+        if (count === 0xffff || p === 0xffffffff) throw new Error(t("userdata.zip.zip64", { file: file.name }));
 
         const decoder = new TextDecoder();
         const files = [];
@@ -137,14 +139,14 @@
 
             const name = path.split("/").pop();
             if (!name || path.startsWith("__MACOSX/") || name.startsWith("._") || !wanted.test(name)) continue;
-            if (flags & 1) throw new Error(`${path} in ${file.name} is encrypted.`);
-            if (method !== 0 && method !== 8) throw new Error(`${path} in ${file.name} uses an unsupported compression method.`);
+            if (flags & 1) throw new Error(t("userdata.zip.encrypted", { path, file: file.name }));
+            if (method !== 0 && method !== 8) throw new Error(t("userdata.zip.method", { path, file: file.name }));
             if (compSize === 0xffffffff || uncompSize === 0xffffffff || localOffset === 0xffffffff) {
-                throw new Error(`${path} in ${file.name} needs ZIP64, which is not supported.`);
+                throw new Error(t("userdata.zip.entryZip64", { path, file: file.name }));
             }
-            if (files.length >= ZIP_MAX_FILES) throw new Error(`${file.name} has more than ${ZIP_MAX_FILES} matching files.`);
+            if (files.length >= ZIP_MAX_FILES) throw new Error(t("userdata.zip.tooMany", { file: file.name, max: ZIP_MAX_FILES }));
             // Cheap early rejection; the streamed check below is the real one.
-            if (uncompSize > limit) throw new Error(`${path} in ${file.name} is larger than ${formatSize(limit)} once extracted.`);
+            if (uncompSize > limit) throw new Error(t("userdata.zip.tooLargeExtracted", { label: `${file.name}/${path}`, size: formatSize(limit) }));
 
             within(localOffset, 30);
             if (view.getUint32(localOffset, true) !== 0x04034b50) throw damaged();
@@ -154,13 +156,13 @@
 
             let data;
             if (method === 0) {
-                if (raw.length > limit) throw new Error(`${path} in ${file.name} is larger than ${formatSize(limit)}.`);
+                if (raw.length > limit) throw new Error(t("userdata.zip.entryTooLarge", { path, file: file.name, size: formatSize(limit) }));
                 data = raw;
             } else {
-                data = await inflateLimited(raw, limit, `${path} in ${file.name}`);
+                data = await inflateLimited(raw, limit, `${file.name}/${path}`);
             }
             totalSize += data.length;
-            if (totalSize > ZIP_MAX_TOTAL) throw new Error(`${file.name} is larger than ${formatSize(ZIP_MAX_TOTAL)} once extracted.`);
+            if (totalSize > ZIP_MAX_TOTAL) throw new Error(t("userdata.zip.tooLargeExtracted", { label: file.name, size: formatSize(ZIP_MAX_TOTAL) }));
             files.push(new File([data], name));
         }
         return files;
@@ -170,11 +172,11 @@
         const out = [];
         for (const file of files) {
             if (/\.(rar|7z)$/i.test(file.name)) {
-                throw new Error(`${file.name}: RAR and 7z archives cannot be opened in the browser. Extract it first (macOS: double-click it or use The Unarchiver; Windows: 7-Zip), then import the files inside.`);
+                throw new Error(t("userdata.zip.rar", { file: file.name }));
             }
             if (/\.zip$/i.test(file.name)) {
                 const inner = await extractZip(file, wanted, limit);
-                if (!inner.length) throw new Error(`${file.name} contains no usable files.`);
+                if (!inner.length) throw new Error(t("userdata.zip.empty", { file: file.name }));
                 out.push(...inner);
             } else {
                 out.push(file);
@@ -197,8 +199,8 @@
 
     // "Oct 9, 10:35 AM", with the year only when it is not the current one.
     function formatDate(d) {
-        if (!(d instanceof Date)) return "unknown date";
-        return d.toLocaleString(undefined, {
+        if (!(d instanceof Date)) return t("userdata.unknownDate");
+        return d.toLocaleString(window.vcI18n.currentLanguage(), {
             month: "short",
             day: "numeric",
             year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric",
@@ -258,14 +260,14 @@
         // errors in the status line instead of throwing.
         const run = (fn) => async (...args) => {
             if (launched) {
-                setStatus("The game is already running. Reload the page to manage saves and skins.", "error");
+                setStatus(t("userdata.locked"), "error");
                 return;
             }
             try {
                 await fn(...args);
             } catch (err) {
                 console.error("[userdata]", err);
-                setStatus(`Error: ${err && err.message ? err.message : err}`, "error");
+                setStatus(t("errors.generic", { message: err && err.message ? err.message : err }), "error");
             }
         };
 
@@ -281,6 +283,10 @@
                 run(handler)([...e.dataTransfer.files]);
             });
         }
+
+        // Status lines are plain text in the language they were written in;
+        // hide them on a language switch rather than leave a mixed page.
+        window.addEventListener("vc:languagechange", () => setStatus(""));
 
         return { setStatus, run, bindDropZone };
     }

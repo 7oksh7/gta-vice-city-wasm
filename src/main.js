@@ -1,3 +1,13 @@
+import {
+  LANGUAGES,
+  applyTranslations,
+  changeLanguage,
+  currentLanguage,
+  setRawText,
+  setText,
+  t,
+} from "./i18n/index.js";
+
 const ASSET_RELEASE_URL = import.meta.env.VITE_ASSET_URL;
 
 const BASE = import.meta.env.BASE_URL;
@@ -247,13 +257,13 @@ async function initSetupFlow() {
     downloadLink.style.display = "none";
   }
 
-  const showError = (message) => {
+  const showError = (key, options) => {
     errorBox.style.display = "block";
-    errorBox.textContent = message;
+    setText(errorBox, key, options);
   };
 
-  const setStorageStatus = (message, state) => {
-    storageStatus.textContent = message;
+  const setStorageStatus = (key, state) => {
+    setText(storageStatus, key);
     storageStatus.dataset.state = state;
   };
 
@@ -268,22 +278,22 @@ async function initSetupFlow() {
     resetBtn.addEventListener("click", async () => {
       if (
         !confirm(
-          "This will PERMANENTLY DELETE your save game progress, along with the imported game files. This cannot be undone.\n\nYou will need to re-import game.tar.gz and start a new save. Continue?",
+          t("setup.resetConfirm"),
         )
       ) {
         return;
       }
       resetBtn.disabled = true;
-      resetBtn.textContent = "Resetting…";
+      setText(resetBtn, "setup.resetting");
       await resetGameData();
-      setStorageStatus("Import required", "missing");
+      setStorageStatus("status.missing", "missing");
       setPlayAvailability(false);
       progress.style.display = "none";
       errorBox.style.display = "none";
-      selectedFileName.textContent = "No file selected";
+      setText(selectedFileName, "setup.noFile");
       fileInput.value = "";
       resetBtn.disabled = false;
-      resetBtn.textContent = "Reset game data";
+      setText(resetBtn, "setup.reset");
     });
   }
 
@@ -293,7 +303,7 @@ async function initSetupFlow() {
       .querySelectorAll(".setup-actions-panel")
       .forEach((element) => (element.style.opacity = "0.5"));
     progress.style.display = "block";
-    progressLabel.textContent = "Reading file…";
+    setText(progressLabel, "progress.readingFile");
     progressPercent.textContent = "0%";
     progressBar.style.width = "0%";
     setPlayAvailability(false);
@@ -301,7 +311,7 @@ async function initSetupFlow() {
     const worker = new Worker(`${BASE}extract-worker.js`);
     worker.onerror = (error) => {
       console.error("[worker error]", error);
-      showError(`Worker error: ${error.message}`);
+      showError("errors.worker", { message: error.message });
       document
         .querySelectorAll(".setup-actions-panel")
         .forEach((element) => (element.style.opacity = "1"));
@@ -320,29 +330,29 @@ async function initSetupFlow() {
         progressBar.style.width = `${message.pct}%`;
         progressPercent.textContent = `${message.pct}%`;
         const labels = {
-          reading: "Reading archive…",
-          decompressing: "Decompressing archive…",
-          extracting: `Extracting files… ${message.done || 0} / ${
-            message.total || ""
-          }`,
+          reading: "progress.reading",
+          decompressing: "progress.decompressing",
+          extracting: "progress.extracting",
         };
-        progressLabel.textContent = labels[message.phase] || "Working…";
+        setText(progressLabel, labels[message.phase] || "progress.working", {
+          done: message.done || 0,
+          total: message.total || "",
+        });
         return;
       }
 
       if (message.type === "done") {
         progressBar.style.width = "100%";
         progressPercent.textContent = "100%";
-        progressLabel.textContent = "Import complete. Verifying files…";
+        setText(progressLabel, "progress.verifying");
         const { ready: isReady, reason } = await waitForGameReady();
         setStorageStatus(
-          isReady ? "Ready to play" : "Import required",
+          isReady ? "status.ready" : "status.missing",
           isReady ? "ready" : "missing",
         );
         setPlayAvailability(isReady);
-        progressLabel.textContent = isReady
-          ? "Import complete. Ready to play."
-          : `Verification failed: ${reason}`;
+        if (isReady) setText(progressLabel, "progress.complete");
+        else setText(progressLabel, "progress.verifyFailed", { reason });
         document
           .querySelectorAll(".setup-actions-panel")
           .forEach((element) => (element.style.opacity = "1"));
@@ -351,8 +361,7 @@ async function initSetupFlow() {
       }
 
       if (message.type === "error") {
-        errorBox.style.display = "block";
-        errorBox.textContent = `Error: ${message.message}`;
+        showError("errors.generic", { message: message.message });
         document
           .querySelectorAll(".setup-actions-panel")
           .forEach((element) => (element.style.opacity = "1"));
@@ -367,9 +376,7 @@ async function initSetupFlow() {
     !("serviceWorker" in navigator) ||
     !("storage" in navigator && navigator.storage.getDirectory)
   ) {
-    showError(
-      "Your browser does not support the required APIs (OPFS / Service Worker). Please use Chrome, Firefox or Safari 15.2+.",
-    );
+    showError("errors.apis");
     return;
   }
 
@@ -390,20 +397,20 @@ async function initSetupFlow() {
       return;
     }
   } catch (error) {
-    showError(`Service Worker error: ${error.message}`);
+    showError("errors.serviceWorker", { message: error.message });
     return;
   }
 
   const { ready, reason } = await waitForGameReady(2, 150);
   console.log("[setup] game ready in OPFS:", ready, reason || "");
   if (ready) {
-    setStorageStatus("Ready to play", "ready");
+    setStorageStatus("status.ready", "ready");
     setPlayAvailability(true);
     progress.style.display = "none";
     return;
   }
 
-  setStorageStatus("Import required", "missing");
+  setStorageStatus("status.missing", "missing");
 
   console.log("[setup] waiting for file selection");
 
@@ -411,14 +418,14 @@ async function initSetupFlow() {
     console.log("[setup] file selected:", fileInput.files[0]?.name);
     const file = fileInput.files[0];
     if (!file) {
-      selectedFileName.textContent = "No file selected";
+      setText(selectedFileName, "setup.noFile");
       return;
     }
 
-    selectedFileName.textContent = file.name;
+    setRawText(selectedFileName, file.name);
 
     if (!/\.tar\.gz$|\.gz$/i.test(file.name)) {
-      showError("Please select the game.tar.gz file.");
+      showError("errors.wrongFile");
       return;
     }
 
@@ -458,7 +465,22 @@ function initOrientationLock() {
   observer.observe(document.body, { attributeFilter: ["class"] });
 }
 
+function initLanguagePicker() {
+  const select = document.getElementById("ui-lang");
+  if (!select) return;
+
+  select.replaceChildren(
+    ...LANGUAGES.map(({ code, label }) => new Option(label, code)),
+  );
+  select.value = currentLanguage();
+  select.addEventListener("change", () => {
+    void changeLanguage(select.value);
+  });
+}
+
 async function boot() {
+  applyTranslations();
+  initLanguagePicker();
   initCanvasBindings();
   initOrientationLock();
 
@@ -467,12 +489,12 @@ async function boot() {
     const storageStatus = document.getElementById("storage-status");
     const errorBox = document.getElementById("setup-error");
     if (storageStatus) {
-      storageStatus.textContent = "Browser not supported";
+      setText(storageStatus, "status.unsupported");
       storageStatus.dataset.state = "error";
     }
     if (errorBox) {
       errorBox.style.display = "block";
-      errorBox.textContent = `Your browser is missing required features: ${missing.join(", ")}. Please use Chrome 110+, Firefox 111+, or Safari 16.4+.`;
+      setText(errorBox, "errors.missingFeatures", { features: missing.join(", ") });
     }
     return;
   }
@@ -499,13 +521,13 @@ function showScriptLoadError(err) {
   }
   const storageStatus = document.getElementById("storage-status");
   if (storageStatus) {
-    storageStatus.textContent = "Could not load the game";
+    setText(storageStatus, "status.loadFailed");
     storageStatus.dataset.state = "error";
   }
   const errorBox = document.getElementById("setup-error");
   if (errorBox) {
     errorBox.style.display = "block";
-    errorBox.textContent = `A required file could not be loaded (${file}). Reload the page with Ctrl/Cmd + Shift + R. Your saves and game files are not affected.`;
+    setText(errorBox, "errors.scriptLoad", { file });
   }
 }
 

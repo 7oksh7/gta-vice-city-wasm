@@ -51,69 +51,9 @@ async function resumeAudioContexts() {
         }
     }
 }
-const translations = {
-    en: {
-        clickToPlay: "Start to play",
-        disclaimer: "DISCLAIMER:",
-        disclaimerSources: "Unofficial fan project, not affiliated with, endorsed by or sponsored by Rockstar Games or Take-Two Interactive. It does not include the game's data files, and you need your own legitimate copy of Grand Theft Auto: Vice City to play. All trademarks and copyrights belong to their respective owners.",
-        downloading: "Downloading",
-        clickToContinue: "Click to continue...",
-        portBy: "WASM engine by:",
-        configLanguage: "Language:",
-        configCheats: "Cheats (F3)",
-        configFullscreen: "Fullscreen",
-        configMaxFps: "Max FPS:",
-        configUnlimited: "(0 = unlimited)",
-    },
-};
-
-var currentLanguage = "en";
-
-window.t = function (key) {
-    return translations[currentLanguage][key];
-}
-
-// Function to update all translated texts on the page
-function updateAllTranslations() {
-    const clickToPlayButton = document.getElementById('click-to-play-button');
-    if (clickToPlayButton) {
-        clickToPlayButton.textContent = t('clickToPlay');
-    }
-
-    const disclaimerText = document.getElementById('disclaimer-text');
-    if (disclaimerText) disclaimerText.textContent = t('disclaimer');
-    
-    const disclaimerSources = document.getElementById('disclaimer-sources');
-    if (disclaimerSources) disclaimerSources.textContent = t('disclaimerSources');
-    
-    const portBy = document.getElementById('port-by');
-    if (portBy) portBy.textContent = t('portBy');
-    
-    // Update config panel labels if present
-    const configLangLabel = document.getElementById('config-lang-label');
-    if (configLangLabel) configLangLabel.textContent = t('configLanguage');
-    
-    const configCheatsLabel = document.getElementById('config-cheats-label');
-    if (configCheatsLabel) configCheatsLabel.textContent = t('configCheats');
-    
-    const configFullscreenLabel = document.getElementById('config-fullscreen-label');
-    if (configFullscreenLabel) configFullscreenLabel.textContent = t('configFullscreen');
-    
-    const configMaxFpsLabel = document.getElementById('config-max-fps-label');
-    if (configMaxFpsLabel) configMaxFpsLabel.textContent = t('configMaxFps');
-    
-    const configMaxFpsUnlimited = document.getElementById('config-max-fps-unlimited');
-    if (configMaxFpsUnlimited) configMaxFpsUnlimited.textContent = t('configUnlimited');
-}
-
-// Function to update game data files based on language
-function updateGameDataForLanguage(lang) {
-    data_content = `${replaceBR}vc-sky-en-v6.data`;
-    wasm_content = `${replaceBR}vc-sky-en-v6.wasm`;
-}
-
-// Initialize data files based on current language
-updateGameDataForLanguage(currentLanguage);
+// The game data is English-only; the UI language (src/i18n) does not change it.
+data_content = `${replaceBR}vc-sky-en-v6.data`;
+wasm_content = `${replaceBR}vc-sky-en-v6.wasm`;
 
 async function loadData() {
     const response = await fetch(data_content, { cache: 'no-store' });
@@ -167,7 +107,7 @@ async function startGame(e) {
     await window.vcUserData?.prepareLaunch();
     const dataBuffer = await loadData();
     spinnerElement.hidden = true;
-    setStatus(t("clickToContinue"));
+    setStatus(t("loader.clickToContinue"));
     introContainer.hidden = false;
     introContainer.style.cursor = 'pointer';
     const clickHandler = () => {
@@ -193,7 +133,7 @@ function setStatus(text) {
     if (match) {
         const [current, total] = match.slice(2, 4).map(Number);
         const percent = (current / total * 100).toFixed(0);
-        statusElement.textContent = t("downloading") + ` ${percent}%`;
+        statusElement.textContent = t("loader.downloadingPercent", { percent });
         progressElement.value = current;
         progressElement.max = total;
         progressElement.hidden = false;
@@ -237,7 +177,7 @@ async function loadGame(data) {
         canvas: function () {
             const canvas = document.getElementById('canvas');
             canvas.addEventListener('webglcontextlost', (e) => {
-                statusElement.textContent = 'WebGL context lost. Please reload the page.';
+                statusElement.textContent = t("loader.webglLost");
                 e.preventDefault();
             });
             canvas.addEventListener('pointerdown', () => {
@@ -264,7 +204,7 @@ async function loadGame(data) {
         return receiveInstance(module.instance, module);
     };
     window.onerror = (message) => {
-        Module.setStatus(`Error: ${message}`);
+        Module.setStatus(t("errors.generic", { message }));
         spinnerElement.hidden = true;
     };
     Module.arguments = window.location.search
@@ -415,17 +355,10 @@ clickToPlay.addEventListener('click', (e) => {
 wrapIDBFS(console.log);
 
 const clickToPlayButton = document.getElementById('click-to-play-button');
-clickToPlayButton.textContent = t('clickToPlay');
 if (!window.__gtaGameReady) {
     clickToPlayButton.classList.add('disabled');
     clickToPlayButton.disabled = true;
 }
-const disclaimerText = document.getElementById('disclaimer-text');
-disclaimerText.textContent = t('disclaimer');
-const disclaimerSources = document.getElementById('disclaimer-sources');
-disclaimerSources.textContent = t('disclaimerSources');
-const portBy = document.getElementById('port-by');
-if (portBy) portBy.textContent = t('portBy');
 
 const revc_iniDefault = `
 [VideoMode]
@@ -556,7 +489,6 @@ const revc_ini = (() => {
 // Configurable mode UI
 if (configurableMode) {
     const configPanel = document.getElementById('config-panel');
-    const configLang = document.getElementById('config-lang');
     const configCheats = document.getElementById('config-cheats');
     const configFullscreen = document.getElementById('config-fullscreen');
     const configMaxFps = document.getElementById('config-max-fps');
@@ -566,22 +498,9 @@ if (configurableMode) {
         configPanel.style.display = 'block';
         
         // Set initial values from URL params
-        if (configLang) configLang.value = currentLanguage;
         configCheats.checked = cheatsEnabled;
         configFullscreen.checked = autoFullScreen;
         configMaxFps.value = maxFPS;
-        
-        // Update config panel labels with current language
-        updateAllTranslations();
-        
-        // Language selector handler
-        if (configLang) {
-            configLang.addEventListener('change', (e) => {
-                currentLanguage = e.target.value;
-                updateGameDataForLanguage(currentLanguage);
-                updateAllTranslations();
-            });
-        }
         
         // Update settings when changed
         configCheats.addEventListener('change', (e) => {

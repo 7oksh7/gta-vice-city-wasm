@@ -15,6 +15,7 @@
         equalBytes, formatSize, formatDate, download, readFile, el, ready,
         createPanel,
     } = U;
+    const { t } = window.vcI18n;
     const { setStatus, run } = createPanel("saves-status");
 
     const SAVE_DIR = "/vc-assets/local/userfiles";
@@ -48,22 +49,22 @@
     // preceding byte; the engine rejects the file if it does not match.
     function validateSave(bytes) {
         if (bytes.length < SAVE_MIN_SIZE) {
-            return `File is too small (${bytes.length} bytes) to be a GTA Vice City save.`;
+            return t("saves.tooSmall", { size: bytes.length });
         }
         if (bytes.length > SAVE_MAX_SIZE) {
-            return `File is too large (${formatSize(bytes.length)}) to be a GTA Vice City save.`;
+            return t("saves.tooLarge", { size: formatSize(bytes.length) });
         }
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         const firstBlock = view.getUint32(0, true);
         if (firstBlock === 0 || firstBlock >= bytes.length) {
-            return "File does not start with a valid save block. It is not a GTA Vice City PC save.";
+            return t("saves.invalidBlock");
         }
         let sum = 0;
         const end = bytes.length - 4;
         for (let i = 0; i < end; i++) sum = (sum + bytes[i]) >>> 0;
         const stored = view.getUint32(end, true);
         if (sum !== stored) {
-            return "Checksum mismatch: the file is corrupted, or it is not a GTA Vice City PC save (mobile, console and Definitive Edition saves are not compatible).";
+            return t("saves.checksum");
         }
         return null;
     }
@@ -102,7 +103,7 @@
         const written = await withDB(openSaveDB, (db) =>
             reqToPromise(db.transaction(IDBFS_STORE, "readonly").objectStore(IDBFS_STORE).get(key)));
         if (!written || !equalBytes(written.contents, bytes)) {
-            throw new Error("The save was written but could not be read back. Browser storage may be full.");
+            throw new Error(t("saves.readBack"));
         }
     }
 
@@ -130,17 +131,17 @@
             slotList.replaceChildren(...slots.map(({ slot, entry }) => {
                 const filled = Boolean(entry && entry.contents);
                 const info = filled
-                    ? `${saveName(entry.contents) || "Unnamed save"} · ${formatDate(entry.timestamp)}`
-                    : "Empty";
+                    ? `${saveName(entry.contents) || t("saves.unnamed")} · ${formatDate(entry.timestamp)}`
+                    : t("saves.empty");
                 const button = (label, handler, className = "") =>
                     el("button", { type: "button", className: `userdata-btn ${className}`.trim(), onclick: run(handler) }, label);
                 return el("li", { className: "userdata-row" },
-                    el("span", { className: "userdata-row-title" }, `Slot ${slot}`),
+                    el("span", { className: "userdata-row-title" }, t("saves.slot", { slot })),
                     el("span", { className: "userdata-row-info" }, info),
                     el("span", { className: "userdata-row-actions" },
                         ...(filled
-                            ? [button("Export", () => exportSlot(slot)), button("Remove", () => removeSave(slot), "userdata-btn-danger")]
-                            : [button("Import", () => pickSaveFor(slot))])));
+                            ? [button(t("saves.export"), () => exportSlot(slot)), button(t("saves.remove"), () => removeSave(slot), "userdata-btn-danger")]
+                            : [button(t("saves.import"), () => pickSaveFor(slot))])));
             }));
         }
 
@@ -152,29 +153,29 @@
         async function importSave(picked, slot) {
             const saves = await expandZips([picked], /\.b$/i, SAVE_MAX_SIZE);
             if (saves.length !== 1) {
-                throw new Error(`${picked.name} contains ${saves.length} saves (${saves.map((f) => f.name).join(", ")}). Extract it and import one file at a time.`);
+                throw new Error(t("saves.multiple", { file: picked.name, count: saves.length, names: saves.map((f) => f.name).join(", ") }));
             }
             const bytes = await readFile(saves[0]);
             const error = validateSave(bytes);
             if (error) throw new Error(`${saves[0].name}: ${error}`);
             await writeSlot(slot, bytes);
-            setStatus(`Imported "${saveName(bytes) || "Unnamed save"}" into slot ${slot}. Start the game and use Load Game.`, "ok");
+            setStatus(t("saves.imported", { name: saveName(bytes) || t("saves.unnamed"), slot }), "ok");
             await refreshSlots();
         }
 
         async function exportSlot(slot) {
             const entry = slots.find((s) => s.slot === slot)?.entry;
-            if (!entry || !entry.contents) throw new Error(`Slot ${slot} is empty.`);
+            if (!entry || !entry.contents) throw new Error(t("saves.slotEmpty", { slot }));
             download(entry.contents, `GTAVCsf${slot}.b`);
-            setStatus(`Exported slot ${slot} as GTAVCsf${slot}.b.`, "ok");
+            setStatus(t("saves.exported", { slot, file: `GTAVCsf${slot}.b` }), "ok");
         }
 
         async function removeSave(slot) {
             const entry = slots.find((s) => s.slot === slot)?.entry;
-            const name = (entry && saveName(entry.contents)) || "Unnamed save";
-            if (!confirm(`Remove "${name}" from slot ${slot}? This cannot be undone.`)) return;
+            const name = (entry && saveName(entry.contents)) || t("saves.unnamed");
+            if (!confirm(t("saves.removeConfirm", { name, slot }))) return;
             await removeSlot(slot);
-            setStatus(`Removed the save in slot ${slot}.`, "ok");
+            setStatus(t("saves.removed", { slot }), "ok");
             await refreshSlots();
         }
 
@@ -184,10 +185,12 @@
             if (picked) await importSave(picked, targetSlot);
         }));
 
-        refreshSlots().catch((err) => {
+        const showStorageError = (err) => {
             console.error("[userdata]", err);
-            setStatus(`Could not open browser storage: ${err && err.message ? err.message : err}`, "error");
-        });
+            setStatus(t("userdata.storageError", { message: err && err.message ? err.message : err }), "error");
+        };
+        refreshSlots().catch(showStorageError);
+        window.addEventListener("vc:languagechange", () => refreshSlots().catch(showStorageError));
     }
 
     Object.assign(U, { validateSave, saveName });

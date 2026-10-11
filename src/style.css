@@ -236,6 +236,89 @@ a:hover {
   color: var(--text-2);
 }
 
+/* ─── Language picker ────────────────────────────────────────── */
+/* Native <select> (keyboard, screen readers and the mobile picker for free),
+   restyled to match the cyan file picker. The icons sit on top
+   with pointer-events off, so a click anywhere opens the select. */
+.lang-switcher {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lang-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-2);
+  transition: color 0.15s;
+}
+
+.lang-picker:hover,
+.lang-picker:focus-within {
+  color: var(--accent-2);
+}
+
+.lang-picker-icon,
+.lang-picker-chevron {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.lang-picker-icon {
+  left: 12px;
+}
+
+.lang-picker-chevron {
+  right: 11px;
+  transition: transform 0.15s;
+}
+
+.lang-picker:hover .lang-picker-chevron {
+  transform: translateY(-40%);
+}
+
+.lang-select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 36px;
+  padding: 0 34px 0 36px;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: var(--radius-btn);
+  background: var(--surface-3);
+  color: var(--text-1);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+.lang-select:hover {
+  border-color: var(--accent-2);
+  background: rgba(0, 210, 255, 0.06);
+  box-shadow: 0 0 18px rgba(0, 210, 255, 0.18);
+}
+
+.lang-select:focus {
+  box-shadow: none;
+}
+
+.lang-select:focus-visible {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.18);
+}
+
+.lang-select option {
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+
 /* ─── Storage status badge ───────────────────────────────────── */
 .storage-status {
   margin: 0 0 14px;
