@@ -240,9 +240,24 @@ a:hover {
 /* Native <select> (keyboard, screen readers and the mobile picker for free),
    restyled to match the cyan file picker. The icons sit on top
    with pointer-events off, so a click anywhere opens the select. */
+/* A row of its own above .start-container (top right of the viewport). It
+   must stay outside it: .start-container > div:first-child is the card grid. */
 .lang-switcher {
+  position: relative;
+  z-index: 20;
   display: flex;
   justify-content: flex-end;
+  padding: 16px 24px 0;
+}
+
+body.gameIsStarted .lang-switcher {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .lang-switcher {
+    padding: 10px 12px;
+  }
 }
 
 .lang-picker {

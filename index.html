@@ -51,6 +51,49 @@
       </div>
     </div>
 
+    <div class="lang-switcher">
+      <div class="lang-picker">
+        <svg
+          class="lang-picker-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+          <path d="M2 12h20" />
+        </svg>
+        <select
+          id="ui-lang"
+          class="lang-select"
+          aria-label="Language"
+          data-i18n-aria-label="language.label"
+        ></select>
+        <svg
+          class="lang-picker-chevron"
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </div>
+    </div>
+
     <div
       class="start-container relative z-20 mx-auto w-full max-w-[1180px] px-4 py-4"
     >
@@ -60,49 +103,6 @@
         <div
           class="rounded-[28px] border border-[rgba(159,195,255,0.16)] bg-[rgba(11,22,37,0.78)] p-[34px] text-left shadow-[0_28px_80px_rgba(0,0,0,0.35)] backdrop-blur-[20px] max-md:rounded-[22px] max-md:p-[18px]"
         >
-          <div class="lang-switcher">
-            <div class="lang-picker">
-              <svg
-                class="lang-picker-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-                <path d="M2 12h20" />
-              </svg>
-              <select
-                id="ui-lang"
-                class="lang-select"
-                aria-label="Language"
-                data-i18n-aria-label="language.label"
-              ></select>
-              <svg
-                class="lang-picker-chevron"
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </div>
-          </div>
-
           <h1
             class="mt-[18px] mb-[10px] text-[clamp(2.4rem,5vw,4.7rem)] leading-[0.95] tracking-[-0.04em] text-[#f6fbff] max-sm:text-[2.55rem]"
           >
