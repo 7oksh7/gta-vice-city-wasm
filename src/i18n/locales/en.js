@@ -152,10 +152,10 @@ export default {
   },
   howto: {
     title: "How to play",
-    step1: "Use “Download game.tar.gz” if you want the file directly from this page.",
-    step2: "Or use “Select game.tar.gz” to choose a file from your computer.",
-    step3: "Wait for the import to finish and confirm the local storage status above.",
-    step4: "Press “Start to play” and wait for the game data to load.",
-    step5: "You can import another local file later if you want to replace the current one.",
+    step1: "Download the game: press “Download game.tar.gz” and save the file on your computer. The game can’t run without it.",
+    step2: "Mount it: press “Select game.tar.gz” and choose the file you just downloaded.",
+    step3: "Wait for the import to finish until the status above says “Ready to play”.",
+    step4: "Press “Start to play” and wait for the game to load.",
+    step5: "You only need to do this once: the game stays stored in this browser and works offline.",
   },
 };

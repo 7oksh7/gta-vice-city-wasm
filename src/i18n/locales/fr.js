@@ -149,10 +149,10 @@ export default {
   },
   howto: {
     title: "Comment jouer",
-    step1: "Utilisez « Télécharger game.tar.gz » si vous voulez le fichier directement depuis cette page.",
-    step2: "Ou utilisez « Sélectionner game.tar.gz » pour choisir un fichier sur votre ordinateur.",
-    step3: "Attendez la fin de l’importation et vérifiez l’état du stockage local ci-dessus.",
-    step4: "Appuyez sur « Commencer à jouer » et attendez le chargement des données du jeu.",
-    step5: "Vous pourrez importer un autre fichier local plus tard si vous voulez remplacer l’actuel.",
+    step1: "Téléchargez le jeu : appuyez sur « Télécharger game.tar.gz » et enregistrez le fichier sur votre ordinateur. Le jeu ne fonctionne pas sans lui.",
+    step2: "Montez-le : appuyez sur « Sélectionner game.tar.gz » et choisissez le fichier que vous venez de télécharger.",
+    step3: "Attendez la fin de l’importation, jusqu’à ce que l’état ci-dessus indique « Prêt à jouer ».",
+    step4: "Appuyez sur « Commencer à jouer » et attendez le chargement du jeu.",
+    step5: "Vous n’avez à le faire qu’une fois : le jeu reste stocké dans ce navigateur et fonctionne hors ligne.",
   },
 };

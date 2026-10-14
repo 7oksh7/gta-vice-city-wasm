@@ -149,10 +149,10 @@ export default {
   },
   howto: {
     title: "So wird gespielt",
-    step1: "Nutze „game.tar.gz herunterladen“, wenn du die Datei direkt von dieser Seite haben willst.",
-    step2: "Oder nutze „game.tar.gz auswählen“, um eine Datei von deinem Computer zu wählen.",
-    step3: "Warte, bis der Import fertig ist, und prüfe oben den Status des lokalen Speichers.",
-    step4: "Drücke „Spiel starten“ und warte, bis die Spieldaten geladen sind.",
-    step5: "Du kannst später eine andere lokale Datei importieren, wenn du die aktuelle ersetzen willst.",
+    step1: "Lade das Spiel herunter: Drücke „game.tar.gz herunterladen“ und speichere die Datei auf deinem Computer. Ohne sie läuft das Spiel nicht.",
+    step2: "Binde sie ein: Drücke „game.tar.gz auswählen“ und wähle die gerade heruntergeladene Datei.",
+    step3: "Warte, bis der Import fertig ist und oben „Bereit zum Spielen“ steht.",
+    step4: "Drücke „Spiel starten“ und warte, bis das Spiel geladen ist.",
+    step5: "Das musst du nur einmal machen: Das Spiel bleibt in diesem Browser gespeichert und funktioniert offline.",
   },
 };
