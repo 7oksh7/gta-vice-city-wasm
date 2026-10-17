@@ -319,12 +319,6 @@ async function initSetupFlow() {
     worker.postMessage({ file });
     worker.onmessage = async (event) => {
       const message = event.data;
-      console.log(
-        "[worker]",
-        message.type,
-        message.phase || "",
-        message.pct || "",
-      );
 
       if (message.type === "progress") {
         progressBar.style.width = `${message.pct}%`;
