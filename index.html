@@ -95,21 +95,17 @@
     </div>
 
     <div
-      class="start-container relative z-20 mx-auto w-full max-w-[1180px] px-4 py-4"
+      class="start-container"
     >
       <div
-        class="grid items-stretch gap-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]"
       >
         <div
-          class="rounded-[28px] border border-[rgba(159,195,255,0.16)] bg-[rgba(11,22,37,0.78)] p-[34px] text-left shadow-[0_28px_80px_rgba(0,0,0,0.35)] backdrop-blur-[20px] max-md:rounded-[22px] max-md:p-[18px]"
         >
           <h1
-            class="mt-[18px] mb-[10px] text-[clamp(2.4rem,5vw,4.7rem)] leading-[0.95] tracking-[-0.04em] text-[#f6fbff] max-sm:text-[2.55rem]"
           >
             Grand Theft Auto:<br />Vice City
           </h1>
           <p
-            class="mb-7 max-w-[38rem] text-left text-[1.05rem] leading-[1.7] text-[#94a7c6]"
             data-i18n-html="intro"
           >
             Import your <code>game.tar.gz</code> once — it's stored locally in
@@ -120,13 +116,12 @@
 
           <div
             id="setup-overlay"
-            class="relative rounded-[22px] border border-[rgba(159,195,255,0.16)] bg-[rgba(9,18,30,0.92)] p-[22px] text-left"
           >
             <div id="storage-status" class="storage-status" data-i18n="setup.checking">
               Checking local game files…
             </div>
-            <h2 class="mb-[10px] text-[1.15rem] text-[#f8fbff]" data-i18n="setup.title">Setup</h2>
-            <p class="mb-4 text-left text-[#94a7c6]" data-i18n="setup.note">
+            <h2 data-i18n="setup.title">Setup</h2>
+            <p data-i18n="setup.note">
               The imported archive is stored locally by this browser, so you can
               come back later without reimporting unless you want to replace it.
             </p>
@@ -145,7 +140,6 @@
               <input
                 type="file"
                 id="game-file-input"
-                class="hidden"
                 accept=".tar.gz,.gz,application/gzip"
               />
 
@@ -159,14 +153,14 @@
               </button>
             </div>
 
-            <div id="setup-progress" class="mt-[14px] hidden">
+            <div id="setup-progress">
               <div class="setup-progress-head">
                 <span class="setup-progress-title" data-i18n="setup.importing">Importing game.tar.gz</span>
                 <span id="setup-progress-percent" class="setup-progress-percent"
                   >0%</span
                 >
               </div>
-              <p id="setup-progress-label" class="mb-2.5 text-[#94a7c6]" data-i18n="setup.preparing">
+              <p id="setup-progress-label" data-i18n="setup.preparing">
                 Preparing&hellip;
               </p>
               <div class="prog-bar-wrap">
@@ -175,7 +169,6 @@
             </div>
             <div
               id="setup-error"
-              class="mt-3 hidden text-[0.92rem] text-[#ff7b7b]"
             ></div>
           </div>
 
@@ -192,7 +185,7 @@
           <div class="click-to-play">
             <button
               id="click-to-play-button"
-              class="disabled flex w-full min-h-12 items-center justify-center rounded-[14px] bg-linear-to-br from-[#82aaff] to-[#72e4c7] px-[18px] text-[1rem] font-bold text-[#07111f] transition-transform duration-200 hover:-translate-y-px"
+              class="disabled"
               data-i18n="play.start"
               disabled
             >
@@ -233,39 +226,33 @@
 
           <div
             id="config-panel"
-            class="mt-[22px] hidden rounded-[18px] border border-[rgba(159,195,255,0.16)] bg-[rgba(255,255,255,0.025)] p-[18px] text-left max-md:p-[15px]"
           >
-            <div class="my-[0.7em] text-[#edf3ff]">
+            <div>
               <label
                 for="config-cheats"
-                class="flex cursor-pointer items-center gap-[0.65em]"
               >
                 <input
                   type="checkbox"
                   id="config-cheats"
-                  class="h-[18px] w-[18px] accent-[#72e4c7]"
                 />
                 <span id="config-cheats-label" data-i18n="config.cheats">Cheats (F3)</span>
               </label>
             </div>
-            <div class="my-[0.7em] text-[#edf3ff]">
+            <div>
               <label
                 for="config-fullscreen"
-                class="flex cursor-pointer items-center gap-[0.65em]"
               >
                 <input
                   type="checkbox"
                   id="config-fullscreen"
                   checked
-                  class="h-[18px] w-[18px] accent-[#72e4c7]"
                 />
                 <span id="config-fullscreen-label" data-i18n="config.fullscreen">Fullscreen</span>
               </label>
             </div>
-            <div class="my-[0.7em] text-[#edf3ff]">
+            <div>
               <label
                 for="config-max-fps"
-                class="flex cursor-pointer items-center gap-[0.65em]"
               >
                 <span id="config-max-fps-label" data-i18n="config.maxFps">Max FPS:</span>
                 <input
@@ -274,7 +261,6 @@
                   min="0"
                   max="240"
                   value="0"
-                  class="w-[78px] rounded-xl border border-[rgba(159,195,255,0.16)] bg-[rgba(255,255,255,0.04)] px-[0.9em] py-[0.72em] text-[#edf3ff]"
                 />
                 <span id="config-max-fps-unlimited" data-i18n="config.unlimited">(0 = unlimited)</span>
               </label>
@@ -283,7 +269,6 @@
         </div>
 
         <div
-          class="flex flex-col gap-[22px] rounded-[28px] border border-[rgba(159,195,255,0.16)] bg-[rgba(11,22,37,0.78)] p-[26px] text-left shadow-[0_28px_80px_rgba(0,0,0,0.35)] backdrop-blur-[20px] max-md:rounded-[22px] max-md:p-[18px]"
         >
           <div class="cover-panel">
             <img
@@ -295,9 +280,9 @@
           </div>
 
           <div
-            class="disclaimer rounded-[18px] border border-[rgba(159,195,255,0.16)] bg-[rgba(255,255,255,0.025)] p-[18px] text-left leading-[1.7] text-[#94a7c6] max-md:p-[15px]"
+            class="disclaimer"
           >
-            <span id="disclaimer-text" class="text-[#f7fbff]" data-i18n="disclaimer.label">DISCLAIMER:</span>
+            <span id="disclaimer-text" data-i18n="disclaimer.label">DISCLAIMER:</span>
             <span class="eula">
               <span id="disclaimer-sources" data-i18n="disclaimer.text">
                 Unofficial fan project, not affiliated with, endorsed by or sponsored by Rockstar Games or Take-Two Interactive. It does not include the game's data files, and you need your own legitimate copy of Grand Theft Auto: Vice City to play. All trademarks and copyrights belong to their respective owners.
@@ -306,12 +291,11 @@
           </div>
 
           <div
-            class="developed-by rounded-[18px] border border-[rgba(159,195,255,0.16)] bg-[rgba(255,255,255,0.025)] p-[18px] text-left leading-[1.7] text-[#94a7c6] max-md:p-[15px]"
+            class="developed-by"
           >
             <div>
               <span data-i18n="credits.port">Browser client port by:</span>
               <a
-                class="text-[#f6fbff]"
                 target="_blank"
                 href="https://github.com/joncodeofficial/gta-vice-city-wasm"
                 target="_blank"
@@ -319,39 +303,34 @@
               >
             </div>
 
-            <div class="mt-2">
+            <div>
               <span data-i18n="credits.basedOn">Based on:</span>
               <a
-                class="text-[#f6fbff]"
                 href="https://github.com/Lolendor/reVCDOS"
                 target="_blank"
                 >reVCDOS</a
               >
               <span data-i18n="credits.by">by</span>
               <a
-                class="text-[#f6fbff]"
                 href="https://github.com/Lolendor"
                 target="_blank"
                 >@Lolendor</a
               >
             </div>
 
-            <div class="mt-2">
+            <div>
               <span id="port-by" data-i18n="credits.engine">WASM engine by:</span>
               <a
-                class="text-[#f6fbff]"
                 href="https://github.com/okhmanyuk-ev"
                 target="_blank"
                 >@specialist003</a
               >,
               <a
-                class="text-[#f6fbff]"
                 href="https://www.youtube.com/caiiiycuk"
                 target="_blank"
                 >@caiiiycuk</a
               >,
               <a
-                class="text-[#f6fbff]"
                 href="https://t.me/ser_var"
                 target="_blank"
                 >@SerGen</a
