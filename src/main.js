@@ -297,11 +297,17 @@ async function initSetupFlow() {
     });
   }
 
-  const runImport = async (file) => {
-    errorBox.style.display = "none";
+  // Reset must not run while the worker is still writing to OPFS.
+  const setImporting = (importing) => {
     document
       .querySelectorAll(".setup-actions-panel")
-      .forEach((element) => (element.style.opacity = "0.5"));
+      .forEach((element) => (element.style.opacity = importing ? "0.5" : "1"));
+    if (resetBtn) resetBtn.disabled = importing;
+  };
+
+  const runImport = async (file) => {
+    errorBox.style.display = "none";
+    setImporting(true);
     progress.style.display = "block";
     setText(progressLabel, "progress.readingFile");
     progressPercent.textContent = "0%";
@@ -312,9 +318,7 @@ async function initSetupFlow() {
     worker.onerror = (error) => {
       console.error("[worker error]", error);
       showError("errors.worker", { message: error.message });
-      document
-        .querySelectorAll(".setup-actions-panel")
-        .forEach((element) => (element.style.opacity = "1"));
+      setImporting(false);
     };
     worker.postMessage({ file });
     worker.onmessage = async (event) => {
@@ -347,18 +351,14 @@ async function initSetupFlow() {
         setPlayAvailability(isReady);
         if (isReady) setText(progressLabel, "progress.complete");
         else setText(progressLabel, "progress.verifyFailed", { reason });
-        document
-          .querySelectorAll(".setup-actions-panel")
-          .forEach((element) => (element.style.opacity = "1"));
+        setImporting(false);
         worker.terminate();
         return;
       }
 
       if (message.type === "error") {
         showError("errors.generic", { message: message.message });
-        document
-          .querySelectorAll(".setup-actions-panel")
-          .forEach((element) => (element.style.opacity = "1"));
+        setImporting(false);
         worker.terminate();
       }
     };
