@@ -395,19 +395,8 @@ async function initSetupFlow() {
     return;
   }
 
-  const { ready, reason } = await waitForGameReady(2, 150);
-  console.log("[setup] game ready in OPFS:", ready, reason || "");
-  if (ready) {
-    setStorageStatus("status.ready", "ready");
-    setPlayAvailability(true);
-    progress.style.display = "none";
-    return;
-  }
-
-  setStorageStatus("status.missing", "missing");
-
-  console.log("[setup] waiting for file selection");
-
+  // Attach before the ready check so a file can still be imported after
+  // "Reset game data" without reloading the page.
   fileInput.addEventListener("change", async () => {
     console.log("[setup] file selected:", fileInput.files[0]?.name);
     const file = fileInput.files[0];
@@ -425,6 +414,19 @@ async function initSetupFlow() {
 
     await runImport(file);
   });
+
+  const { ready, reason } = await waitForGameReady(2, 150);
+  console.log("[setup] game ready in OPFS:", ready, reason || "");
+  if (ready) {
+    setStorageStatus("status.ready", "ready");
+    setPlayAvailability(true);
+    progress.style.display = "none";
+    return;
+  }
+
+  setStorageStatus("status.missing", "missing");
+
+  console.log("[setup] waiting for file selection");
 }
 
 function initCanvasBindings() {
