@@ -371,6 +371,7 @@ async function initSetupFlow() {
     !("serviceWorker" in navigator) ||
     !("storage" in navigator && navigator.storage.getDirectory)
   ) {
+    setStorageStatus("status.unsupported", "error");
     showError("errors.apis");
     return;
   }
@@ -392,6 +393,7 @@ async function initSetupFlow() {
       return;
     }
   } catch (error) {
+    setStorageStatus("status.loadFailed", "error");
     showError("errors.serviceWorker", { message: error.message });
     return;
   }
