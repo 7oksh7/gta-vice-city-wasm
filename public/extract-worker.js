@@ -88,8 +88,26 @@ async function writeToOPFS(name, data) {
         dir = await dir.getDirectoryHandle(parts[i], { create: true });
     }
     const fh = await dir.getFileHandle(parts[parts.length - 1], { create: true });
+
+    // Safari's createWritable() leaves a full temp copy of every write in
+    // $TMPDIR (FileSystemWritableStream*) and never deletes it. A sync access
+    // handle writes into the file itself, so prefer it when available.
+    if (fh.createSyncAccessHandle) {
+        const handle = await fh.createSyncAccessHandle();
+        try {
+            handle.truncate(0);
+            handle.write(data, { at: 0 });
+            handle.flush();
+        } finally {
+            handle.close();
+        }
+        return;
+    }
+
+    // Copy so the write only carries this entry's bytes, not the whole tar
+    // buffer that `data` is a view of.
     const writable = await fh.createWritable();
-    await writable.write(data);
+    await writable.write(data.slice());
     await writable.close();
 }
 
@@ -134,11 +152,7 @@ self.onmessage = async (event) => {
             }
         }
 
-        const root = await navigator.storage.getDirectory();
-        const marker = await root.getFileHandle('_game_ready', { create: true });
-        const w = await marker.createWritable();
-        await w.write(new TextEncoder().encode('v4'));
-        await w.close();
+        await writeToOPFS('_game_ready', new TextEncoder().encode('v4'));
 
         self.postMessage({ type: 'done' });
     } catch (err) {
