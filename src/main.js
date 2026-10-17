@@ -297,11 +297,12 @@ async function initSetupFlow() {
     });
   }
 
-  // Reset must not run while the worker is still writing to OPFS.
+  // Neither reset nor a second import may run while the worker is still
+  // writing to OPFS. The download link stays usable.
+  const filePicker = document.querySelector(`label[for="${fileInput.id}"]`);
   const setImporting = (importing) => {
-    document
-      .querySelectorAll(".setup-actions-panel")
-      .forEach((element) => (element.style.opacity = importing ? "0.5" : "1"));
+    fileInput.disabled = importing;
+    filePicker?.classList.toggle("disabled", importing);
     if (resetBtn) resetBtn.disabled = importing;
   };
 
