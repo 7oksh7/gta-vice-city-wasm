@@ -484,6 +484,18 @@ body.gameIsStarted .lang-switcher {
     0 0 26px rgba(0, 210, 255, 0.28);
 }
 
+.file-picker.disabled {
+  opacity: 0.5;
+  filter: none;
+}
+
+.file-picker.disabled:hover {
+  transform: none;
+  border-color: rgba(0, 210, 255, 0.25);
+  background: var(--surface-3);
+  box-shadow: none;
+}
+
 .file-picker-label {
   font-size: 0.76rem;
   font-weight: 700;

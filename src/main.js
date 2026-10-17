@@ -297,11 +297,18 @@ async function initSetupFlow() {
     });
   }
 
+  // Neither reset nor a second import may run while the worker is still
+  // writing to OPFS. The download link stays usable.
+  const filePicker = document.querySelector(`label[for="${fileInput.id}"]`);
+  const setImporting = (importing) => {
+    fileInput.disabled = importing;
+    filePicker?.classList.toggle("disabled", importing);
+    if (resetBtn) resetBtn.disabled = importing;
+  };
+
   const runImport = async (file) => {
     errorBox.style.display = "none";
-    document
-      .querySelectorAll(".setup-actions-panel")
-      .forEach((element) => (element.style.opacity = "0.5"));
+    setImporting(true);
     progress.style.display = "block";
     setText(progressLabel, "progress.readingFile");
     progressPercent.textContent = "0%";
@@ -312,19 +319,11 @@ async function initSetupFlow() {
     worker.onerror = (error) => {
       console.error("[worker error]", error);
       showError("errors.worker", { message: error.message });
-      document
-        .querySelectorAll(".setup-actions-panel")
-        .forEach((element) => (element.style.opacity = "1"));
+      setImporting(false);
     };
     worker.postMessage({ file });
     worker.onmessage = async (event) => {
       const message = event.data;
-      console.log(
-        "[worker]",
-        message.type,
-        message.phase || "",
-        message.pct || "",
-      );
 
       if (message.type === "progress") {
         progressBar.style.width = `${message.pct}%`;
@@ -353,18 +352,14 @@ async function initSetupFlow() {
         setPlayAvailability(isReady);
         if (isReady) setText(progressLabel, "progress.complete");
         else setText(progressLabel, "progress.verifyFailed", { reason });
-        document
-          .querySelectorAll(".setup-actions-panel")
-          .forEach((element) => (element.style.opacity = "1"));
+        setImporting(false);
         worker.terminate();
         return;
       }
 
       if (message.type === "error") {
         showError("errors.generic", { message: message.message });
-        document
-          .querySelectorAll(".setup-actions-panel")
-          .forEach((element) => (element.style.opacity = "1"));
+        setImporting(false);
         worker.terminate();
       }
     };
@@ -401,19 +396,8 @@ async function initSetupFlow() {
     return;
   }
 
-  const { ready, reason } = await waitForGameReady(2, 150);
-  console.log("[setup] game ready in OPFS:", ready, reason || "");
-  if (ready) {
-    setStorageStatus("status.ready", "ready");
-    setPlayAvailability(true);
-    progress.style.display = "none";
-    return;
-  }
-
-  setStorageStatus("status.missing", "missing");
-
-  console.log("[setup] waiting for file selection");
-
+  // Attach before the ready check so a file can still be imported after
+  // "Reset game data" without reloading the page.
   fileInput.addEventListener("change", async () => {
     console.log("[setup] file selected:", fileInput.files[0]?.name);
     const file = fileInput.files[0];
@@ -431,6 +415,19 @@ async function initSetupFlow() {
 
     await runImport(file);
   });
+
+  const { ready, reason } = await waitForGameReady(2, 150);
+  console.log("[setup] game ready in OPFS:", ready, reason || "");
+  if (ready) {
+    setStorageStatus("status.ready", "ready");
+    setPlayAvailability(true);
+    progress.style.display = "none";
+    return;
+  }
+
+  setStorageStatus("status.missing", "missing");
+
+  console.log("[setup] waiting for file selection");
 }
 
 function initCanvasBindings() {
