@@ -24,6 +24,12 @@ let isTouch = isMobile && window.matchMedia('(pointer: coarse)').matches;
 
 document.body.dataset.isTouch = isTouch ? 1 : 0;
 
+// The engine asks for pointer lock once it is fullscreen. On touch that freezes
+// every pointer at 0,0, so drags measure zero and the sticks/menu swipes die.
+if (isTouch) {
+    Element.prototype.requestPointerLock = () => {};
+}
+
 const dataSize = 130 * 1024 * 1024;
 const textDecoder = new TextDecoder();
 let haveOriginalGame = true;
