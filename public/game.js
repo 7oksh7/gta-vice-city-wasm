@@ -266,6 +266,18 @@ async function loadGame(data) {
         lockTargetWhilePressed: false,
         tapTarget: document.querySelector('.touch-control.menu'),
     }]);
+    // Opening the menu leaves fullscreen so the browser bars are reachable again.
+    document.querySelector('.touch-control.menu').addEventListener('pointerdown', () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        }
+    });
+    // Back in the game after the menu: return to fullscreen.
+    new MutationObserver(() => {
+        if (isTouch && document.body.dataset.stateMenu === '0' && !document.fullscreenElement) {
+            document.documentElement.requestFullscreen?.().catch(() => {});
+        }
+    }).observe(document.body, { attributes: true, attributeFilter: ['data-state-menu'] });
     emulator.AddDisplayButtonEventListeners(0, [{
         buttonIndex: 3,
         lockTargetWhilePressed: false,
