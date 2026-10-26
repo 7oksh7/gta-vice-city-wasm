@@ -15,10 +15,10 @@ export default {
     download: "下载 game.tar.gz",
     select: "选择 game.tar.gz",
     noFile: "未选择文件",
-    reset: "重置游戏数据",
+    resetFiles: "删除游戏",
+    resetFilesConfirm:
+      "这将删除已导入的游戏文件。你的存档和皮肤会保留。\n\n你需要重新导入 game.tar.gz 才能继续游戏。是否继续？",
     resetting: "正在重置…",
-    resetConfirm:
-      "这将永久删除你的存档进度以及已导入的游戏文件，且无法撤销。\n\n你需要重新导入 game.tar.gz 并开始新游戏。是否继续？",
     importing: "正在导入 game.tar.gz",
     preparing: "正在准备…",
   },

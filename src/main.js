@@ -185,7 +185,7 @@ async function waitForGameReady(retries = 6, delayMs = 400) {
   return { ready: false, reason: lastReason };
 }
 
-async function resetGameData() {
+async function clearGameFiles() {
   // Clear OPFS: delete all known directories and the marker file
   try {
     const root = await navigator.storage.getDirectory();
@@ -198,25 +198,6 @@ async function resetGameData() {
     }
   } catch (err) {
     console.warn("[reset] OPFS clear failed:", err);
-  }
-
-  // Only this game's databases: the origin (e.g. <user>.github.io) is shared
-  // with other sites. Skins: USERDATA_DB in shared.js. Saves: the engine's
-  // IDBFS mount, named after its directory (SAVE_DIR in saves.js).
-  try {
-    await Promise.all(
-      ["vc-userdata", "/vc-assets/local/userfiles"].map(
-        (name) =>
-          new Promise((resolve) => {
-            const req = indexedDB.deleteDatabase(name);
-            req.onsuccess = resolve;
-            req.onerror = resolve;
-            req.onblocked = resolve;
-          }),
-      ),
-    );
-  } catch (err) {
-    console.warn("[reset] IndexedDB clear failed:", err);
   }
 }
 
@@ -232,7 +213,7 @@ async function initSetupFlow() {
   const storageStatus = document.getElementById("storage-status");
   const selectedFileName = document.getElementById("selected-file-name");
   const clickToPlayButton = document.getElementById("click-to-play-button");
-  const resetBtn = document.getElementById("reset-game-btn");
+  const resetFilesBtn = document.getElementById("reset-files-btn");
 
   if (
     !overlay ||
@@ -271,29 +252,24 @@ async function initSetupFlow() {
     window.__gtaGameReady = enabled;
     clickToPlayButton.disabled = !enabled;
     clickToPlayButton.classList.toggle("disabled", !enabled);
-    if (resetBtn) resetBtn.classList.toggle("hidden", !enabled);
   };
 
-  if (resetBtn) {
-    resetBtn.addEventListener("click", async () => {
-      if (
-        !confirm(
-          t("setup.resetConfirm"),
-        )
-      ) {
+  if (resetFilesBtn) {
+    resetFilesBtn.addEventListener("click", async () => {
+      if (!confirm(t("setup.resetFilesConfirm"))) {
         return;
       }
-      resetBtn.disabled = true;
-      setText(resetBtn, "setup.resetting");
-      await resetGameData();
+      resetFilesBtn.disabled = true;
+      setText(resetFilesBtn, "setup.resetting");
+      await clearGameFiles();
       setStorageStatus("status.missing", "missing");
       setPlayAvailability(false);
       progress.style.display = "none";
       errorBox.style.display = "none";
       setText(selectedFileName, "setup.noFile");
       fileInput.value = "";
-      resetBtn.disabled = false;
-      setText(resetBtn, "setup.reset");
+      resetFilesBtn.disabled = false;
+      setText(resetFilesBtn, "setup.resetFiles");
     });
   }
 
@@ -303,7 +279,7 @@ async function initSetupFlow() {
   const setImporting = (importing) => {
     fileInput.disabled = importing;
     filePicker?.classList.toggle("disabled", importing);
-    if (resetBtn) resetBtn.disabled = importing;
+    if (resetFilesBtn) resetFilesBtn.disabled = importing;
   };
 
   const runImport = async (file) => {
@@ -351,7 +327,9 @@ async function initSetupFlow() {
         );
         setPlayAvailability(isReady);
         if (isReady) setText(progressLabel, "progress.complete");
-        else setText(progressLabel, "progress.verifyFailed", { reason });
+        else {
+          setText(progressLabel, "progress.verifyFailed", { reason });
+            }
         setImporting(false);
         worker.terminate();
         return;
@@ -359,7 +337,7 @@ async function initSetupFlow() {
 
       if (message.type === "error") {
         showError("errors.generic", { message: message.message });
-        setImporting(false);
+          setImporting(false);
         worker.terminate();
       }
     };

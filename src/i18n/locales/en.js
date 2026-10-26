@@ -18,10 +18,10 @@ export default {
     download: "Download game.tar.gz",
     select: "Select game.tar.gz",
     noFile: "No file selected",
-    reset: "Reset game data",
+    resetFiles: "Delete game",
+    resetFilesConfirm:
+      "This will delete the imported game files. Your saves and skins are kept.\n\nYou will need to re-import game.tar.gz to play again. Continue?",
     resetting: "Resetting…",
-    resetConfirm:
-      "This will PERMANENTLY DELETE your save game progress, along with the imported game files. This cannot be undone.\n\nYou will need to re-import game.tar.gz and start a new save. Continue?",
     importing: "Importing game.tar.gz",
     preparing: "Preparing…",
   },

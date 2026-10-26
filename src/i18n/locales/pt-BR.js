@@ -15,10 +15,10 @@ export default {
     download: "Baixar game.tar.gz",
     select: "Selecionar game.tar.gz",
     noFile: "Nenhum arquivo selecionado",
-    reset: "Redefinir dados do jogo",
+    resetFiles: "Apagar jogo",
+    resetFilesConfirm:
+      "Isso vai apagar os arquivos do jogo importados. Seus jogos salvos e skins são mantidos.\n\nVocê vai precisar importar o game.tar.gz de novo para jogar. Continuar?",
     resetting: "Redefinindo…",
-    resetConfirm:
-      "Isso vai APAGAR PERMANENTEMENTE o progresso dos seus jogos salvos, junto com os arquivos do jogo importados. Não é possível desfazer.\n\nVocê vai precisar importar o game.tar.gz de novo e começar um novo jogo. Continuar?",
     importing: "Importando game.tar.gz",
     preparing: "Preparando…",
   },

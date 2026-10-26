@@ -15,10 +15,10 @@ export default {
     download: "game.tar.gz herunterladen",
     select: "game.tar.gz auswählen",
     noFile: "Keine Datei ausgewählt",
-    reset: "Spieldaten zurücksetzen",
+    resetFiles: "Spiel löschen",
+    resetFilesConfirm:
+      "Dadurch werden die importierten Spieldateien gelöscht. Deine Spielstände und Skins bleiben erhalten.\n\nDu musst game.tar.gz erneut importieren, um wieder zu spielen. Fortfahren?",
     resetting: "Wird zurückgesetzt…",
-    resetConfirm:
-      "Dadurch werden dein gespeicherter Spielfortschritt und die importierten Spieldateien ENDGÜLTIG GELÖSCHT. Das kann nicht rückgängig gemacht werden.\n\nDu musst game.tar.gz erneut importieren und ein neues Spiel beginnen. Fortfahren?",
     importing: "game.tar.gz wird importiert",
     preparing: "Wird vorbereitet…",
   },
