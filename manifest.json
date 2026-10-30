@@ -1,12 +1,12 @@
 {
-  "name": "GTA: Vice City — WASM Port",
+  "name": "Vice City",
   "short_name": "Vice City",
-  "description": "Play GTA: Vice City in your browser with WebAssembly. Works offline after the first import.",
+  "description": "Play Vice City on this device. Works offline after the first import.",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
-  "background_color": "#05060a",
-  "theme_color": "#05060a",
+  "display": "fullscreen",
+  "background_color": "#07050f",
+  "theme_color": "#07050f",
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -26,5 +26,10 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "landscape"
 }
