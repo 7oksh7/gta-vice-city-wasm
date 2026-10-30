@@ -10,27 +10,27 @@
             position: fixed;
             top: 0;
             right: 0;
-            width: ${isTouch ? '100vw' : '340px'};
+            width: min(420px, 100vw);
             height: 100vh;
             background: rgba(10, 10, 10, 0.95);
             backdrop-filter: blur(15px);
             color: #eee;
             font-family: 'Consolas', 'Monaco', monospace;
             padding: ${isTouch ? '15px 15px 150px 15px' : '20px 20px 100px 20px'};
-            z-index: 10000;
+            z-index: 100001;
             display: none;
             flex-direction: column;
             gap: ${isTouch ? '12px' : '15px'};
             overflow-y: auto;
             user-select: none;
-            border-left: ${isTouch ? 'none' : '2px solid #ff00ff'};
+            border-left: 2px solid #ff00ff;
             box-shadow: -10px 0 30px rgba(0,0,0,0.8);
             box-sizing: border-box;
         }
         
         /* Touch toggle button */
         #cheat-toggle-btn {
-            display: ${isTouch ? 'flex' : 'none'};
+            display: flex;
             position: fixed;
             top: 10px;
             right: 10px;
@@ -42,7 +42,8 @@
             color: #ff00ff;
             font-size: 20px;
             font-weight: bold;
-            z-index: 9999;
+            opacity: 0.7;
+            z-index: 100000;
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -53,7 +54,8 @@
             background: rgba(255, 0, 255, 0.6);
             transform: scale(0.95);
         }
-        #cheat-toggle-btn.active {
+        #cheat-toggle-btn:hover, #cheat-toggle-btn.active {
+            opacity: 1;
             background: rgba(255, 0, 255, 0.6);
         }
         
@@ -214,7 +216,7 @@
         
         /* Close button for touch */
         #cheat-close-btn {
-            display: ${isTouch ? 'flex' : 'none'};
+            display: flex;
             position: absolute;
             top: 15px;
             right: 15px;
@@ -317,7 +319,7 @@
     const toggleBtn = document.createElement('div');
     toggleBtn.id = 'cheat-toggle-btn';
     toggleBtn.innerHTML = '⚙';
-    toggleBtn.title = 'Open Cheat Menu';
+    toggleBtn.title = 'Cheats (F3)';
     document.body.appendChild(toggleBtn);
 
     // Create airbreak touch controls

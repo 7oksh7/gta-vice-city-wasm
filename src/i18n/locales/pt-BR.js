@@ -1,6 +1,6 @@
 export default {
   meta: {
-    title: "GTA: Vice City — Port WASM",
+    title: "Vice City",
   },
   language: {
     label: "Idioma",
@@ -33,6 +33,7 @@ export default {
     reading: "Lendo o arquivo compactado…",
     decompressing: "Descompactando…",
     extracting: "Extraindo arquivos… {{done}} / {{total}}",
+    extractingCount: "Extraindo arquivos… {{done}}",
     working: "Processando…",
     verifying: "Importação concluída. Verificando arquivos…",
     complete: "Importação concluída. Pronto para jogar.",

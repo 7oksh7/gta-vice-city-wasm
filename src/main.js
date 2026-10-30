@@ -19,6 +19,7 @@ const LEGACY_SCRIPT_SOURCES = [
   `${BASE}saves.js`,
   `${BASE}skins.js`,
   `${BASE}game.js`,
+  `${BASE}premium.js`,
 ];
 
 function isLocalDevEnvironment() {
@@ -309,7 +310,12 @@ async function initSetupFlow() {
           decompressing: "progress.decompressing",
           extracting: "progress.extracting",
         };
-        setText(progressLabel, labels[message.phase] || "progress.working", {
+        // The streaming extractor does not know the file count up front.
+        const labelKey =
+          message.phase === "extracting" && !message.total
+            ? "progress.extractingCount"
+            : labels[message.phase] || "progress.working";
+        setText(progressLabel, labelKey, {
           done: message.done || 0,
           total: message.total || "",
         });

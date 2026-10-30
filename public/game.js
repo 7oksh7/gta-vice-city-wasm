@@ -99,8 +99,6 @@ async function startGame(e) {
     }
 
     document.querySelector('.start-container').style.display = 'none';
-    document.querySelector('.disclaimer').style.display = 'none';
-    document.querySelector('.developed-by').style.display = 'none';
 
     const intro = document.querySelector('.intro');
     const introContainer = document.querySelector('.intro-container');

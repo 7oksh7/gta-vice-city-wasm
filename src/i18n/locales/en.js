@@ -3,10 +3,32 @@
 // in all locales: the game data is English-only.
 export default {
   meta: {
-    title: "GTA: Vice City — WASM Port",
+    title: "Vice City",
   },
   language: {
     label: "Language",
+  },
+  ui: {
+    eyebrow: "Offline edition",
+    lede: "Import your game once. After that it lives on this device and plays without a connection.",
+    gameFiles: "Game files",
+    prefs: "Preferences",
+    prefsNote: "Everything here is remembered automatically on this device.",
+    cheatsHint: "Opens with F3 or the floating button. Works in fullscreen too.",
+    autoBackup: "Auto-backup saves",
+    autoBackupHint: "Keeps the last 5 versions of each save slot while you play.",
+    remind: "Save reminders",
+    remindHint: "A quiet nudge to save at a safehouse after 20 minutes without one.",
+    settingsAuto: "✓ Game settings (controls, audio, display) are saved automatically.",
+    backups: "Auto-backups",
+    backupsNote: "Copies of your saves made automatically while you play. Restore one into its slot, then use Load Game.",
+    backupsEmpty: "No backups yet. They appear after you save in the game.",
+    restore: "Restore",
+    restoreConfirm: "Replace slot {{slot}} with this backup? The current save in that slot will be overwritten.",
+    restored: "Restored the backup into slot {{slot}}. Start the game and use Load Game.",
+    backupToast: "Progress backed up · slot {{slot}}",
+    remindToast: "Tip: save at a safehouse so your progress is kept.",
+    slotShort: "Slot {{slot}}",
   },
   rotate: "Rotate your device",
   intro:
@@ -36,6 +58,7 @@ export default {
     reading: "Reading archive…",
     decompressing: "Decompressing archive…",
     extracting: "Extracting files… {{done}} / {{total}}",
+    extractingCount: "Extracting files… {{done}}",
     working: "Working…",
     verifying: "Import complete. Verifying files…",
     complete: "Import complete. Ready to play.",

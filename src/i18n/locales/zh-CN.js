@@ -1,6 +1,6 @@
 export default {
   meta: {
-    title: "GTA：罪恶都市 — WASM 移植版",
+    title: "Vice City",
   },
   language: {
     label: "语言",
@@ -33,6 +33,7 @@ export default {
     reading: "正在读取压缩包…",
     decompressing: "正在解压缩…",
     extracting: "正在提取文件… {{done}} / {{total}}",
+    extractingCount: "正在提取文件… {{done}}",
     working: "正在处理…",
     verifying: "导入完成，正在校验文件…",
     complete: "导入完成，可以开始游戏。",
