@@ -17,104 +17,129 @@
     const toggle = (label, hint, boxId) => ({ kind: "toggle", label, hint, boxId });
     const action = (label, hint, run) => ({ kind: "run", label, hint, run });
 
+    const note = (text) => ({ kind: "note", text });
+    const sw = (label, hint, get, set) => ({ kind: "switch", label, hint, get, set });
+
+    // Vehicles that have a built-in cheat code.
+    const SPAWN = [
+        ["Bloodring Banger", "TRAVELINSTYLE"],
+        ["Bloodring Banger 2", "GETTHEREQUICKLY"],
+        ["Sabre Turbo", "GETTHEREFAST"],
+        ["Hotring Racer", "GETTHEREVERYFASTINDEED"],
+        ["Hotring Racer 2", "GETTHEREAMAZINGLYFAST"],
+        ["Hearse", "THELASTRIDE"],
+        ["Limo", "ROCKANDROLLCAR"],
+        ["Trashmaster", "RUBBISHCAR"],
+        ["Caddie", "BETTERTHANWALKING"],
+        ["Rhino tank", "PANZER"],
+    ];
+
+    // Health regen (the "HEALTH REGEN" script of the CLEO mod; it autostarts).
+    let regenOn = readPref("vc.regen.v1", true);
+
+    // "CHEATS" script of the CLEO mod: same entries, same order, same wording
+    // (CHT_0 to CHT_56). Section headings are only for easier scrolling.
+    const CHEATS = [
+        section("Weapons and player"),
+        cheat("All light weapons", "THUGSTOOLS"),
+        cheat("All medium weapons", "PROFESSIONALTOOLS"),
+        cheat("All heavy weapons", "NUTTERTOOLS"),
+        cheat("Full Health", "ASPIRINE", "Also repairs the car you are in"),
+        cheat("Full Armor", "PRECIOUSPROTECTION"),
+        cheat("Commit Suicide", "ICANTTAKEITANYMORE", "You only survive with high health and armor"),
+        cheat("Raise Wanted Level", "YOUWONTTAKEMEALIVE"),
+        cheat("Decrease Wanted Level", "LEAVEMEALONE"),
+        section("Fun"),
+        cheat("Fast boats can fly", "AIRSHIP"),
+        cheat("Ladies Man, Women Follow You", "FANNYMAGNET"),
+        cheat("Makes you smoke a cigarette", "CERTAINDEATH"),
+        cheat("Makes Tommy fatter", "DEEPFRIEDMARSBARS"),
+        cheat("Gives Tommy girly arms/legs", "PROGRAMMER"),
+        section("Skins (get out of any vehicle first)"),
+        cheat("Change Skin/Clothes", "STILLLIKEDRESSINGUP"),
+        cheat("Play as Ricardo Diaz", "CHEATSHAVEBEENCRACKED"),
+        cheat("Play as Lance Vance", "LOOKLIKELANCE"),
+        cheat("Play as Ken Rosenberg", "MYSONISALAWYER"),
+        cheat("Play as Hilary King", "ILOOKLIKEHILARY"),
+        cheat("Play as Jezz Torent", "ROCKANDROLLMAN"),
+        cheat("Play as Dick", "WELOVEOURDICK"),
+        cheat("Play as Phil Cassidy", "ONEARMEDBANDIT"),
+        cheat("Play as Sonny Forelli", "IDONTHAVETHEMONEYSONNY"),
+        cheat("Play as Mercedes", "FOXYLITTLETHING"),
+        section("Vehicles (stand in an open area near a road)"),
+        action("Spawn a random car", "Picks one of the cars below", () => {
+            const [name, code] = SPAWN[Math.floor(Math.random() * SPAWN.length)];
+            typeCode(code, "random car: " + name);
+        }),
+        cheat("Spawn a Bloodring Banger", "TRAVELINSTYLE"),
+        cheat("Spawn a Bloodring Banger 2", "GETTHEREQUICKLY"),
+        cheat("Spawn a Sabre Turbo", "GETTHEREFAST"),
+        cheat("Spawn a Hotring Racer", "GETTHEREVERYFASTINDEED"),
+        cheat("Spawn a Hotring Racer 2", "GETTHEREAMAZINGLYFAST"),
+        cheat("Spawn a Hearse", "THELASTRIDE"),
+        cheat("Spawn Limo", "ROCKANDROLLCAR"),
+        cheat("Spawn a Trashmaster", "RUBBISHCAR"),
+        cheat("Spawn a Caddie", "BETTERTHANWALKING"),
+        section("Traffic and cars"),
+        cheat("Blow up nearby cars", "BIGBANG", "Destroys every loaded vehicle, including yours"),
+        cheat("Aggressive Drivers", "MIAMITRAFFIC"),
+        cheat("All cars are pink", "AHAIRDRESSERSCAR"),
+        cheat("All cars are black", "IWANTITPAINTEDBLACK"),
+        cheat("Cars can fly", "COMEFLYWITHME"),
+        cheat("Perfect Handling", "GRIPISEVERYTHING"),
+        cheat("All traffic lights are green", "GREENLIGHT"),
+        cheat("Cars can drive/hover over water", "SEAWAYS"),
+        cheat("Only the wheels of a car are visible", "WHEELSAREALLINEED"),
+        cheat("Sportscars have big wheels", "LOADSOFLITTLETHINGS"),
+        cheat("Peds get in your car", "HOPINGIRL"),
+        section("Weather"),
+        cheat("Sunny Weather", "ALOVELYDAY"),
+        cheat("Light Clouds", "APLEASANTDAY"),
+        cheat("Dense Clouds", "ABITDRIEG"),
+        cheat("Foggy Weather", "CANTSEEATHING"),
+        cheat("Stormy Weather", "CATSANDDOGS"),
+        section("Game speed"),
+        cheat("Speed up game clock", "LIFEISPASSINGMEBY"),
+        cheat("Makes everything faster", "ONSPEED"),
+        cheat("Makes everything slower", "BOOOOOORING"),
+        section("Pedestrians and media"),
+        cheat("Peds Riot", "FIGHTFIGHTFIGHT", "Cannot be undone this session. Do not save afterwards"),
+        cheat("Peds Hate You", "NOBODYLIKESME", "Cannot be undone this session. Do not save afterwards"),
+        cheat("Peds Carry Guns", "OURGODGIVENRIGHTTOBEARARMS"),
+        cheat("Girls Carry Guns", "CHICKSWITHGUNS"),
+        cheat("Shows Media Level", "CHASESTAT"),
+    ];
+
     const TABS = [
+        { id: "cheats", name: "Cheats", items: CHEATS },
         {
-            id: "player",
-            name: "Player",
+            id: "spawner",
+            name: "Car spawner",
+            items: [
+                note("The original spawner lists every vehicle in the game. This port can only spawn the vehicles that have a built-in cheat code, so those are listed here."),
+                ...SPAWN.map(([name, code]) => cheat(name, code)),
+            ],
+        },
+        {
+            id: "scripts",
+            name: "Scripts",
+            items: [
+                sw("Health regen", "Slowly refills your health while you play (autostart)", () => regenOn, (v) => {
+                    regenOn = v;
+                    writePref("vc.regen.v1", v);
+                    say("Health regen " + (v ? "ON" : "OFF"));
+                }),
+                action("All weapons", "Gives all three weapon sets at once", () =>
+                    runMany(["THUGSTOOLS", "PROFESSIONALTOOLS", "NUTTERTOOLS"], "All weapons activated!")),
+            ],
+        },
+        {
+            id: "extras",
+            name: "Extras",
             items: [
                 toggle("God Mode", "Infinite health", "ce-toggle-godmode"),
                 toggle("AirBreak", "Turn on, then press Right Shift (or the fly button) to float and move freely", "ce-toggle-airbreak"),
                 action("Add $9,999,999", "Adds to your current money", () => clickHidden("ce-add-money", "+$9,999,999")),
-                cheat("Full health", "ASPIRINE", "Also repairs the car you are in"),
-                cheat("Full armor", "PRECIOUSPROTECTION"),
-                cheat("Clear wanted level", "LEAVEMEALONE"),
-                cheat("Raise wanted level", "YOUWONTTAKEMEALIVE", "Adds two stars"),
-                cheat("Show media attention", "CHASESTAT", "Chase stat display. Appears outside missions once media attention is high"),
-                cheat("Suicide", "ICANTTAKEITANYMORE", "You only survive with high health and armor"),
-            ],
-        },
-        {
-            id: "weapons",
-            name: "Weapons",
-            items: [
-                action("Full loadout", "All three weapon sets, full health and armor", () => runMany(["THUGSTOOLS", "PROFESSIONALTOOLS", "NUTTERTOOLS", "ASPIRINE", "PRECIOUSPROTECTION"], "Full loadout")),
-                cheat("Weapon set 1", "THUGSTOOLS", "Thug tools"),
-                cheat("Weapon set 2", "PROFESSIONALTOOLS", "Professional tools"),
-                cheat("Weapon set 3", "NUTTERTOOLS", "Nutter tools"),
-            ],
-        },
-        {
-            id: "vehicles",
-            name: "Vehicles",
-            items: [
-                section("Spawn (stand in an open area near a road)"),
-                cheat("Rhino tank", "PANZER"),
-                cheat("Sabre Turbo", "GETTHEREFAST"),
-                cheat("Bloodring Banger A", "GETTHEREQUICKLY"),
-                cheat("Bloodring Banger B", "TRAVELINSTYLE"),
-                cheat("Hotring Racer A", "GETTHEREVERYFASTINDEED"),
-                cheat("Hotring Racer B", "GETTHEREAMAZINGLYFAST"),
-                cheat("Hearse", "THELASTRIDE"),
-                cheat("Limo", "ROCKANDROLLCAR"),
-                cheat("Caddy", "BETTERTHANWALKING"),
-                cheat("Trashmaster", "RUBBISHCAR"),
-                section("Effects (type again to turn off)"),
-                cheat("Flying cars", "COMEFLYWITHME"),
-                cheat("Flying boats", "AIRSHIP"),
-                cheat("Drive on water", "SEAWAYS"),
-                cheat("Perfect handling", "GRIPISEVERYTHING"),
-                cheat("Only wheels visible", "WHEELSAREALLINEED"),
-                cheat("All cars black", "IWANTITPAINTEDBLACK"),
-                cheat("All cars pink", "AHAIRDRESSERSCAR"),
-                cheat("Small wheels", "LOADSOFLITTLETHINGS"),
-            ],
-        },
-        {
-            id: "world",
-            name: "World",
-            items: [
-                section("Weather"),
-                cheat("Sunny", "ALOVELYDAY"),
-                cheat("Cloudy", "APLEASANTDAY"),
-                cheat("Very cloudy", "ABITDRIEG"),
-                cheat("Rain", "CATSANDDOGS"),
-                cheat("Fog", "CANTSEEATHING"),
-                section("Time and speed"),
-                cheat("Fast time", "LIFEISPASSINGMEBY"),
-                cheat("Fast game", "ONSPEED"),
-                cheat("Slow game", "BOOOOOORING"),
-                section("Traffic"),
-                cheat("Green lights", "GREENLIGHT"),
-                cheat("Fast traffic", "MIAMITRAFFIC"),
-                section("Pedestrians"),
-                cheat("Riot", "FIGHTFIGHTFIGHT", "Cannot be undone this session. Do not save afterwards"),
-                cheat("Attack you", "NOBODYLIKESME", "Cannot be undone this session. Do not save afterwards"),
-                cheat("Armed", "OURGODGIVENRIGHTTOBEARARMS"),
-                cheat("Armed women", "CHICKSWITHGUNS"),
-                cheat("Ladies' man", "FANNYMAGNET"),
-                cheat("Hop in a car", "HOPINGIRL"),
-                cheat("Explode all cars", "BIGBANG", "Destroys every loaded vehicle, including yours"),
-            ],
-        },
-        {
-            id: "skins",
-            name: "Skins",
-            items: [
-                section("Get out of any vehicle first"),
-                cheat("Random skin", "STILLLIKEDRESSINGUP"),
-                cheat("Sonny Forelli", "IDONTHAVETHEMONEYSONNY"),
-                cheat("Lance Vance", "LOOKLIKELANCE"),
-                cheat("Hilary King", "ILOOKLIKEHILARY"),
-                cheat("Jezz Torrent", "ROCKANDROLLMAN"),
-                cheat("Ricardo Diaz", "CHEATSHAVEBEENCRACKED"),
-                cheat("Ken Rosenberg", "MYSONISALAWYER"),
-                cheat("Phil Cassidy", "ONEARMEDBANDIT"),
-                cheat("Mercedes", "FOXYLITTLETHING"),
-                cheat("Candy Suxx", "IWANTBIGTITS"),
-                cheat("Dick", "WELOVEOURDICK"),
-                cheat("Cigarette", "CERTAINDEATH"),
-                cheat("Fat Tommy", "DEEPFRIEDMARSBARS"),
-                cheat("Thin Tommy", "PROGRAMMER"),
             ],
         },
         { id: "teleport", name: "Teleport", custom: () => renderTeleport() },
@@ -166,6 +191,22 @@
 
     const api = () => window.vcCheatApi || null;
 
+    function readPref(key, fallback) {
+        try {
+            const v = localStorage.getItem(key);
+            return v === null ? fallback : v === "1";
+        } catch (e) {
+            return fallback;
+        }
+    }
+    function writePref(key, on) {
+        try {
+            localStorage.setItem(key, on ? "1" : "0");
+        } catch (e) {
+            /* ignore */
+        }
+    }
+
     function readJSON(key, fallback) {
         try {
             const v = JSON.parse(localStorage.getItem(key));
@@ -189,6 +230,13 @@
         p[2] > -50 &&
         p[2] < 600 &&
         !(Math.abs(p[0]) < 0.5 && Math.abs(p[1]) < 0.5);
+
+    // Health regen: a few HP every second, up to full health.
+    setInterval(() => {
+        if (!regenOn || !document.body.classList.contains("gameIsStarted") || !api() || !api().getHealth) return;
+        const hp = api().getHealth();
+        if (Number.isFinite(hp) && hp > 0 && hp < 100) api().setHealth(Math.min(100, hp + 3));
+    }, 1000);
 
     // Remember where the player stands (on foot) so it can be returned to later.
     setInterval(() => {
@@ -237,7 +285,7 @@
 
     let root = null;
     let listNode = null;
-    let activeTab = "player";
+    let activeTab = "cheats";
     let open = false;
     let lastGameStatus = "";
 
@@ -253,6 +301,26 @@
         for (const it of items) {
             if (it.kind === "section") {
                 nodes.push(h("div", { className: "vc-sec" }, it.label));
+            } else if (it.kind === "note") {
+                nodes.push(h("div", { className: "vc-note" }, it.text));
+            } else if (it.kind === "switch") {
+                const knob = h("span", { className: "vc-sw" });
+                knob.classList.toggle("on", Boolean(it.get()));
+                nodes.push(
+                    h(
+                        "button",
+                        {
+                            type: "button",
+                            className: "vc-row",
+                            onclick: () => {
+                                it.set(!it.get());
+                                knob.classList.toggle("on", Boolean(it.get()));
+                            },
+                        },
+                        h("span", { className: "vc-txt" }, h("span", { className: "vc-lab" }, it.label), h("span", { className: "vc-hint" }, it.hint || "")),
+                        knob,
+                    ),
+                );
             } else if (it.kind === "toggle") {
                 const sw = h("span", { className: "vc-sw" });
                 const box = document.getElementById(it.boxId);
