@@ -597,6 +597,20 @@
     }
 
     function toggleMenu() {
+        // The CLEO-style menu (cleo-menu.js) replaces the old panel.
+        if (window.vcCleo) {
+            menuOpen = window.vcCleo.toggle();
+            toggleBtn.classList.toggle('active', menuOpen);
+            if (menuOpen) {
+                if (document.pointerLockElement) document.exitPointerLock();
+                document.body.style.cursor = 'default';
+                if (Module.canvas) Module.canvas.style.cursor = 'default';
+            } else {
+                if (Module.canvas) Module.canvas.style.cursor = 'none';
+                document.body.style.cursor = 'none';
+            }
+            return;
+        }
         menuOpen = !menuOpen;
         ui.style.display = menuOpen ? 'flex' : 'none';
         toggleBtn.classList.toggle('active', menuOpen);
@@ -1742,5 +1756,39 @@
         // Update controls visibility periodically
         setInterval(updateTouchControlsVisibility, 500);
     }
+
+    // Small API for cleo-menu.js
+    window.vcCheatApi = {
+        toggleMenu,
+        getPos() {
+            const addrs = getStaticAddresses();
+            if (!addrs) return null;
+            try {
+                const view = getView();
+                const x = addrs.healthAddr - 0x31C;
+                return [view.getFloat32(x, true), view.getFloat32(x + 4, true), view.getFloat32(x + 8, true)];
+            } catch (e) {
+                return null;
+            }
+        },
+        setPos(p) {
+            const addrs = getStaticAddresses();
+            if (!addrs) return false;
+            try {
+                const view = getView();
+                const x = addrs.healthAddr - 0x31C;
+                const v = addrs.healthAddr - 0x2E0;
+                view.setFloat32(x, p[0], true);
+                view.setFloat32(x + 4, p[1], true);
+                view.setFloat32(x + 8, p[2] + 0.6, true);
+                view.setFloat32(v, 0, true);
+                view.setFloat32(v + 4, 0, true);
+                view.setFloat32(v + 8, 0, true);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
+    };
 
 })();

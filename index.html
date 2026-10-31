@@ -11,8 +11,8 @@
     <link rel="manifest" href="/gta-vice-city-wasm/manifest.json" />
     <link rel="apple-touch-icon" href="/gta-vice-city-wasm/icons/icon-192.png" />
     <meta name="theme-color" content="#07050f" />
-    <script type="module" crossorigin src="/gta-vice-city-wasm/assets/index-DSAYSd-n.js"></script>
-    <link rel="stylesheet" crossorigin href="/gta-vice-city-wasm/assets/index-Dn89Psk_.css">
+    <script type="module" crossorigin src="/gta-vice-city-wasm/assets/index-BfrwkMc8.js"></script>
+    <link rel="stylesheet" crossorigin href="/gta-vice-city-wasm/assets/index-27flFMd6.css">
   </head>
 
   <body
@@ -172,6 +172,14 @@
             <ul id="backup-list" class="userdata-list"></ul>
           </details>
 
+          <details id="storage-panel" class="userdata-panel">
+            <summary><h2 data-i18n="ui.storage">Storage check</h2></summary>
+            <p class="userdata-note" data-i18n="ui.storageNote">Shows what this browser has really stored for the game. In the game, press F8 to write progress and settings to storage right away.</p>
+            <div id="storage-status" class="userdata-status" role="status" hidden></div>
+            <ul id="storage-list" class="userdata-list"></ul>
+            <button id="storage-refresh" class="userdata-btn" type="button" data-i18n="ui.refresh">Refresh</button>
+          </details>
+
           <details id="skins-panel" class="userdata-panel">
             <summary><h2 data-i18n="skins.title">Skins</h2></summary>
             <p class="userdata-note" data-i18n="skins.note">Change how Tommy looks.</p>
@@ -188,6 +196,7 @@
 
       <footer class="vx-foot">
         <p id="disclaimer-text" data-i18n="disclaimer.text">Unofficial fan project. You need your own legitimate copy of the game. All trademarks belong to their respective owners.</p>
+        <p class="vx-build">build 2.3</p>
       </footer>
     </div>
     <canvas class="emscripten" id="canvas"></canvas>
