@@ -1319,3 +1319,14 @@ a {
     margin-right: 18px;
   }
 }
+
+.vx-build {
+  margin: 6px 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+#storage-refresh {
+  margin-bottom: 4px;
+}

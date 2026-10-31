@@ -20,6 +20,7 @@ const LEGACY_SCRIPT_SOURCES = [
   `${BASE}skins.js`,
   `${BASE}game.js`,
   `${BASE}premium.js`,
+  `${BASE}cleo-menu.js`,
 ];
 
 function isLocalDevEnvironment() {

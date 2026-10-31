@@ -54,6 +54,7 @@
     const PORTAL_IDS = [
         "cheat-toggle-btn",
         "cheat-engine-ui",
+        "vx-cleo",
         "airbreak-touch-controls",
         "airbreak-vertical-btns",
         "airbreak-toggle-fly",
@@ -146,6 +147,29 @@
         });
     }
 
+
+    // Same checks as saves.js (those helpers are private to that file).
+    function isValidSave(bytes) {
+        if (!bytes || bytes.length < 1024) return false;
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const first = view.getUint32(0, true);
+        if (first === 0 || first >= bytes.length) return false;
+        const end = bytes.length - 4;
+        let sum = 0;
+        for (let i = 0; i < end; i++) sum = (sum + bytes[i]) >>> 0;
+        return sum === view.getUint32(end, true);
+    }
+
+    function saveLabel(bytes) {
+        try {
+            const chars = new Uint16Array(bytes.slice(4, 52).buffer);
+            const end = chars.indexOf(0);
+            return String.fromCharCode(...(end < 0 ? chars : chars.subarray(0, end))).trim();
+        } catch (e) {
+            return "";
+        }
+    }
+
     const lastSignature = new Map(); // slot -> "size:checksum"
     let lastSaveAt = Date.now();
     let scanning = false;
@@ -178,7 +202,7 @@
                     continue;
                 }
                 // skip files that are half-written or not a valid save
-                if (U.validateSave && U.validateSave(bytes)) continue;
+                if (!isValidSave(bytes)) continue;
 
                 const slot = Number(m[1]);
                 const sig = signature(bytes);
@@ -190,7 +214,7 @@
                 if (!prefs.autobackup) continue;
                 const newest = (await listBackups()).find((b) => b.slot === slot);
                 if (newest && U.equalBytes(newest.bytes, bytes)) continue;
-                await addBackup(slot, bytes, U.saveName ? U.saveName(bytes) : "");
+                await addBackup(slot, bytes, saveLabel(bytes));
                 toast(t("ui.backupToast", { slot }));
             }
         } catch (err) {
@@ -273,6 +297,153 @@
         window.addEventListener("vc:languagechange", () => refresh().catch(() => {}));
     }
 
+
+    // ─── Storage flush + storage check ──────────────────────────────
+
+    // The engine only pushes its files to IndexedDB at certain moments (after a
+    // save-point save, after a settings change). Anything else it writes stays in
+    // memory and disappears with the tab. Flush regularly instead.
+    //
+    // Safety: never flush before the engine has finished its first load from
+    // storage (syncdone === 1), or an empty in-memory folder could overwrite
+    // what is stored.
+    let flushing = false;
+    let lastFlushAt = 0;
+
+    function flushStorage() {
+        const M = window.Module;
+        if (flushing || !running() || M.syncdone !== 1) return Promise.resolve(false);
+        flushing = true;
+        return new Promise((resolve) => {
+            try {
+                M.FS.syncfs(false, (err) => {
+                    flushing = false;
+                    if (err) console.warn("[flush]", err);
+                    else lastFlushAt = Date.now();
+                    resolve(!err);
+                });
+            } catch (e) {
+                flushing = false;
+                console.warn("[flush]", e);
+                resolve(false);
+            }
+        });
+    }
+
+    async function manualFlush() {
+        const M = window.Module;
+        if (!running()) return;
+        if (M.syncdone !== 1) {
+            toast(t("ui.flushWait"));
+            return;
+        }
+        try {
+            if (typeof M.syncRevcIni === "function") M.syncRevcIni();
+        } catch (e) {
+            /* ignore */
+        }
+        const ok = await flushStorage();
+        toast(ok ? t("ui.flushOk") : t("ui.flushFail"));
+    }
+
+    // Read what is actually stored (works before the game starts).
+    async function readStoredFiles() {
+        if (indexedDB.databases) {
+            const dbs = await indexedDB.databases();
+            if (!dbs.some((d) => d.name === SAVE_DIR)) return [];
+        }
+        return new Promise((resolve, reject) => {
+            const open = indexedDB.open(SAVE_DIR);
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+                const db = open.result;
+                if (!db.objectStoreNames.contains(IDBFS_STORE)) {
+                    db.close();
+                    return resolve([]);
+                }
+                const out = [];
+                const cur = db.transaction(IDBFS_STORE, "readonly").objectStore(IDBFS_STORE).openCursor();
+                cur.onerror = () => {
+                    db.close();
+                    reject(cur.error);
+                };
+                cur.onsuccess = () => {
+                    const c = cur.result;
+                    if (!c) {
+                        db.close();
+                        return resolve(out);
+                    }
+                    const v = c.value;
+                    if (v && v.contents) {
+                        out.push({ name: String(c.key).split("/").pop(), size: v.contents.length, time: v.timestamp });
+                    }
+                    c.continue();
+                };
+            };
+        });
+    }
+
+    function initStoragePanel() {
+        const list = document.getElementById("storage-list");
+        if (!list) return;
+        const { el, formatDate, formatSize } = U;
+        const { setStatus } = U.createPanel("storage-status");
+
+        async function refresh() {
+            const lines = [];
+            let persisted = null;
+            try {
+                persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null;
+            } catch (e) {
+                /* ignore */
+            }
+            let est = null;
+            try {
+                est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
+            } catch (e) {
+                /* ignore */
+            }
+            const iniLen = (localStorage.getItem("vcsky.revc.ini") || "").length;
+
+            lines.push([t("ui.stPersist"), persisted === null ? "?" : persisted ? t("ui.yes") : t("ui.no")]);
+            if (est) lines.push([t("ui.stUsage"), `${formatSize(est.usage || 0)} / ${formatSize(est.quota || 0)}`]);
+            lines.push([t("ui.stIni"), iniLen ? t("ui.yes") : t("ui.no")]);
+
+            let files = [];
+            try {
+                files = await readStoredFiles();
+            } catch (e) {
+                setStatus(String(e && e.message ? e.message : e), "error");
+            }
+            const rows = lines.map(([k, v]) =>
+                el("li", { className: "userdata-row" }, el("span", { className: "userdata-row-title" }, k), el("span", { className: "userdata-row-info" }, v)),
+            );
+            rows.push(
+                el("li", { className: "userdata-row" }, el("span", { className: "userdata-row-title" }, t("ui.stFiles")), el("span", { className: "userdata-row-info" }, String(files.length))),
+            );
+            files
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach((f) =>
+                    rows.push(
+                        el(
+                            "li",
+                            { className: "userdata-row" },
+                            el("span", { className: "userdata-row-title" }, f.name),
+                            el("span", { className: "userdata-row-info" }, `${formatSize(f.size)}${f.time ? " · " + formatDate(new Date(f.time)) : ""}`),
+                        ),
+                    ),
+                );
+            list.replaceChildren(...rows);
+        }
+
+        const btn = document.getElementById("storage-refresh");
+        if (btn) btn.addEventListener("click", () => refresh().catch(() => {}));
+        document.getElementById("storage-panel").addEventListener("toggle", (e) => {
+            if (e.target.open) refresh().catch(() => {});
+        });
+        window.addEventListener("vc:languagechange", () => refresh().catch(() => {}));
+    }
+
     // ─── Boot ───────────────────────────────────────────────────────
 
     function init() {
@@ -280,6 +451,7 @@
         bindPref("pref-autobackup", "autobackup");
         bindPref("pref-remind", "remind");
         initBackupsPanel();
+        initStoragePanel();
 
         // 5. keep the browser from evicting game files and saves under storage pressure
         if (navigator.storage && navigator.storage.persist) {
@@ -295,6 +467,19 @@
                 /* settings file not written yet */
             }
         }, 20000);
+
+        // regular flush of the game's files to storage, plus F8 for "save to storage now"
+        setInterval(flushStorage, 15000);
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "hidden") flushStorage();
+        });
+        window.addEventListener("pagehide", flushStorage);
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "F8") {
+                e.preventDefault();
+                manualFlush();
+            }
+        });
 
         // 2. backups
         setInterval(scanSaves, 30000);
