@@ -55,6 +55,7 @@
         "cheat-toggle-btn",
         "cheat-engine-ui",
         "vx-cleo",
+        "vx-cleo-sel",
         "airbreak-touch-controls",
         "airbreak-vertical-btns",
         "airbreak-toggle-fly",
