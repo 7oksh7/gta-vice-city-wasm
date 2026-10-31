@@ -1760,6 +1760,25 @@
     // Small API for cleo-menu.js
     window.vcCheatApi = {
         toggleMenu,
+        getHealth() {
+            const addrs = getStaticAddresses();
+            if (!addrs) return null;
+            try {
+                return getView().getFloat32(addrs.healthAddr, true);
+            } catch (e) {
+                return null;
+            }
+        },
+        setHealth(value) {
+            const addrs = getStaticAddresses();
+            if (!addrs) return false;
+            try {
+                getView().setFloat32(addrs.healthAddr, value, true);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
         getPos() {
             const addrs = getStaticAddresses();
             if (!addrs) return null;
