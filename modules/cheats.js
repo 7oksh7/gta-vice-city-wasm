@@ -32,8 +32,9 @@
         #cheat-toggle-btn {
             display: flex;
             position: fixed;
-            top: 10px;
-            right: 10px;
+            top: 3vmin;
+            left: 17.5vmin;
+            right: auto;
             width: 50px;
             height: 50px;
             background: rgba(255, 0, 255, 0.3);
@@ -94,10 +95,11 @@
         }
         .airbreak-vertical-btns {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: calc(3vmin + 52px);
+            right: auto;
+            left: calc(50% - 65px);
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             gap: 10px;
             z-index: 10001;
         }
@@ -119,8 +121,9 @@
         }
         #airbreak-toggle-fly {
             position: fixed;
-            bottom: 160px;
-            right: 20px;
+            bottom: 3vmin;
+            right: auto;
+            left: calc(50% - 40px);
             width: 80px;
             height: 40px;
             background: rgba(255, 255, 0, 0.2);
@@ -569,7 +572,7 @@
         if (h.handlerFunc && !h._wrapped) {
             const originalHandler = h.handlerFunc;
             h.handlerFunc = function(e) {
-                if (menuOpen && !e._isCheat && (h.eventTypeString.startsWith('key') || h.eventTypeString.startsWith('mouse') || h.eventTypeString.startsWith('touch'))) {
+                if (menuOpen && !e._isCheat && !/(up|end|cancel)$/.test(h.eventTypeString) && (h.eventTypeString.startsWith('key') || h.eventTypeString.startsWith('mouse') || h.eventTypeString.startsWith('touch'))) {
                     if (e && e.key === 'F3') return originalHandler.apply(this, arguments);
                     return;
                 }
@@ -585,7 +588,7 @@
             if (h.handlerFunc && !h._wrapped) {
                 const originalHandler = h.handlerFunc;
                 h.handlerFunc = function(e) {
-                    if (menuOpen && !e._isCheat && (h.eventTypeString.startsWith('key') || h.eventTypeString.startsWith('mouse') || h.eventTypeString.startsWith('touch'))) {
+                    if (menuOpen && !e._isCheat && !/(up|end|cancel)$/.test(h.eventTypeString) && (h.eventTypeString.startsWith('key') || h.eventTypeString.startsWith('mouse') || h.eventTypeString.startsWith('touch'))) {
                         if (e && e.key === 'F3') return originalHandler.apply(this, arguments);
                         return;
                     }
@@ -643,7 +646,7 @@
     const dragThreshold = 10; // pixels to move before considered a drag
     
     // Load saved position from localStorage
-    const savedPos = localStorage.getItem('cheat-toggle-pos');
+    const savedPos = localStorage.getItem('cheat-toggle-pos-v2');
     if (savedPos) {
         try {
             const pos = JSON.parse(savedPos);
@@ -713,7 +716,7 @@
             if (toggleBtnDragging) {
                 // Save position
                 const rect = toggleBtn.getBoundingClientRect();
-                localStorage.setItem('cheat-toggle-pos', JSON.stringify({
+                localStorage.setItem('cheat-toggle-pos-v2', JSON.stringify({
                     left: rect.left,
                     top: rect.top
                 }));
@@ -1077,54 +1080,91 @@
         updateStatus("Reset");
     };
 
-    window.typeCheat = async function(code) {
+    // Types a cheat code into the game's own keyboard handlers.
+    // - one cheat at a time (calls are queued), so letters of two codes never mix
+    // - one animation frame between letters, so the game sees every letter
+    // - a handler that throws no longer aborts the whole code
+    // - key handlers are looked up again for every letter, in case the game
+    //   re-registered them (fullscreen, pointer lock)
+    let cheatQueue = Promise.resolve();
+    const nextFrame = () =>
+        new Promise((resolve) => {
+            let done = false;
+            const finish = () => {
+                if (!done) {
+                    done = true;
+                    resolve();
+                }
+            };
+            requestAnimationFrame(finish);
+            setTimeout(finish, 80); // tab in the background: do not wait forever
+        });
+
+    function keyHandlers(type) {
+        const seen = new Set();
+        return (JSEvents.eventHandlers || []).filter((h) => {
+            if (h.eventTypeString !== type) return false;
+            const key = h.callbackfunc + ':' + h.userData;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }
+
+    async function typeCheatNow(code) {
         console.log("Typing cheat:", code);
         updateStatus("Entering cheat...");
-        
-        if (typeof JSEvents === 'undefined' || !JSEvents.eventHandlers) return;
+        if (typeof JSEvents === 'undefined' || !JSEvents.eventHandlers) return false;
 
-        const handlers = JSEvents.eventHandlers.filter(h => 
-            h.eventTypeString === 'keydown' || h.eventTypeString === 'keypress' || h.eventTypeString === 'keyup'
-        );
+        for (let t = 0; t < 5 && keyHandlers('keydown').length === 0; t++) {
+            await new Promise((r) => setTimeout(r, 200));
+        }
+        if (keyHandlers('keydown').length === 0) {
+            updateStatus("No keyboard handler found. Reload the page.");
+            return false;
+        }
 
         const eventDataPtr = _malloc(160);
+        try {
+            for (let i = 0; i < code.length; i++) {
+                const char = code[i].toUpperCase();
+                const keyCode = char.charCodeAt(0);
 
-        for (let i = 0; i < code.length; i++) {
-            const char = code[i].toUpperCase();
-            const keyCode = char.charCodeAt(0);
-            
-            const fillBuffer = () => {
-                for (let j = 0; j < 160; j++) HEAPU8[eventDataPtr + j] = 0;
-                HEAPF64[eventDataPtr >> 3] = performance.now();
-                const idx = eventDataPtr >> 2;
-                HEAP32[idx + 5] = keyCode;
-                HEAP32[idx + 6] = keyCode;
-                HEAP32[idx + 7] = keyCode;
-                stringToUTF8(char, eventDataPtr + 32, 32);
-                stringToUTF8('Key' + char, eventDataPtr + 64, 32);
-                stringToUTF8(char, eventDataPtr + 96, 32);
-            };
+                const fire = (type) => {
+                    for (let j = 0; j < 160; j++) HEAPU8[eventDataPtr + j] = 0;
+                    HEAPF64[eventDataPtr >> 3] = performance.now();
+                    const idx = eventDataPtr >> 2;
+                    HEAP32[idx + 5] = keyCode;
+                    HEAP32[idx + 6] = keyCode;
+                    HEAP32[idx + 7] = keyCode;
+                    stringToUTF8(char, eventDataPtr + 32, 32);
+                    stringToUTF8('Key' + char, eventDataPtr + 64, 32);
+                    stringToUTF8(char, eventDataPtr + 96, 32);
+                    for (const h of keyHandlers(type)) {
+                        try {
+                            getWasmTableEntry(h.callbackfunc)(h.eventTypeId, eventDataPtr, h.userData);
+                        } catch (e) {
+                            console.warn("[cheat] handler failed", type, e);
+                        }
+                    }
+                };
 
-            const fakeEvent = { _isCheat: true };
-
-            fillBuffer();
-            for (const h of handlers) {
-                if (h.eventTypeString === 'keydown') getWasmTableEntry(h.callbackfunc)(h.eventTypeId, eventDataPtr, h.userData);
+                fire('keydown');
+                fire('keypress');
+                fire('keyup');
+                await nextFrame();
             }
-            fillBuffer();
-            for (const h of handlers) {
-                if (h.eventTypeString === 'keypress') getWasmTableEntry(h.callbackfunc)(h.eventTypeId, eventDataPtr, h.userData);
-            }
-            fillBuffer();
-            for (const h of handlers) {
-                if (h.eventTypeString === 'keyup') getWasmTableEntry(h.callbackfunc)(h.eventTypeId, eventDataPtr, h.userData);
-            }
-            
-            await new Promise(r => setTimeout(r, 5));
+        } finally {
+            _free(eventDataPtr);
         }
-        
-        _free(eventDataPtr);
         updateStatus("Cheat entered: " + code);
+        return true;
+    }
+
+    window.typeCheat = function(code) {
+        const job = cheatQueue.then(() => typeCheatNow(code));
+        cheatQueue = job.catch(() => {});
+        return job;
     };
 
     // ========== AIRBREAK FUNCTIONALITY ==========
@@ -1569,7 +1609,7 @@
         let flyBtnInitialBottom = 0;
         
         // Load saved fly button position
-        const savedFlyPos = localStorage.getItem('cheat-fly-pos');
+        const savedFlyPos = localStorage.getItem('cheat-fly-pos-v2');
         if (savedFlyPos) {
             try {
                 const pos = JSON.parse(savedFlyPos);
@@ -1628,7 +1668,7 @@
             if (flyBtnDragging) {
                 // Save position
                 const rect = flyToggleBtn.getBoundingClientRect();
-                localStorage.setItem('cheat-fly-pos', JSON.stringify({
+                localStorage.setItem('cheat-fly-pos-v2', JSON.stringify({
                     right: window.innerWidth - rect.right,
                     bottom: window.innerHeight - rect.bottom
                 }));
