@@ -1330,3 +1330,36 @@ a {
 #storage-refresh {
   margin-bottom: 4px;
 }
+
+/* Driving: gas and brake swap places.
+   Gamepad button 0 (".run") is the gas pedal in a vehicle, button 2 (".jump") is the brake.
+   Not applied in the pause menu or cutscenes, where ".run" is the "next" arrow. */
+[data-state-car="1"]:not([data-state-menu="1"]):not([data-state-cutscene="1"]):not([data-state-hunter="1"]) .touch-control.run {
+  bottom: 13vmin;
+  right: 2vmin;
+}
+[data-state-car="1"]:not([data-state-menu="1"]):not([data-state-cutscene="1"]):not([data-state-hunter="1"]) .touch-control.jump {
+  bottom: 2vmin;
+  right: 24vmin;
+}
+
+/* Aim and shoot buttons used to sit on exactly the same spot (bottom 30vmin, right 24vmin)
+   whenever both were visible. The aim / handbrake button (".drift") gets its own slot
+   directly to the left of the shoot button (".fist"). */
+[data-state-car="0"] .touch-control.drift,
+[data-state-scope-mode="1"] .touch-control.drift,
+[data-state-scope-gun="1"] .touch-control.drift,
+[data-state-car="1"][data-state-panzer="1"] .touch-control.drift,
+[data-state-car="1"][data-state-car-with-weapon="1"] .touch-control.drift,
+[data-state-car="1"][data-state-car-gun="1"][data-state-bike="1"] .touch-control.drift {
+  right: 46vmin;
+}
+
+/* Helicopter: the "get out" button used to sit on the shoot button. */
+[data-state-car="1"][data-state-hunter="1"] .touch-control.car.getIn {
+  bottom: 30vmin;
+  right: 46vmin;
+}
+[data-state-car="1"][data-state-hunter="1"] .touch-control.fist {
+  bottom: 34vmin;
+}

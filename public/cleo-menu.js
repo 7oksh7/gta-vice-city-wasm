@@ -23,7 +23,8 @@
     async function code(c) {
         if (typeof window.typeCheat !== "function") return say("Cheat engine is not ready yet");
         try {
-            await window.typeCheat(c);
+            const ok = await window.typeCheat(c);
+            say(ok === false ? "Cheat not entered. Reload the page and try again" : "Typed " + c);
         } catch (e) {
             say("Could not run that one");
         }
